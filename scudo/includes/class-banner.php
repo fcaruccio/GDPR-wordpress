@@ -70,6 +70,13 @@ class Scudo_Banner {
             $policy_url = get_permalink( absint( $options['policy_page'] ) );
         }
 
+        // Link alla privacy policy (pagina nativa WP o generata dal wizard)
+        $privacy_url = '';
+        $wp_privacy_page = (int) get_option( 'wp_page_for_privacy_policy', 0 );
+        if ( $wp_privacy_page ) {
+            $privacy_url = get_privacy_policy_url();
+        }
+
         $position = $options['banner_position'] === 'top' ? 'top' : 'bottom';
         ?>
 
@@ -80,8 +87,15 @@ class Scudo_Banner {
             <p class="scudo-banner__title"><?php echo esc_html( $options['banner_title'] ); ?></p>
             <p class="scudo-banner__text">
                 <?php echo esc_html( $options['banner_text'] ); ?>
-                <?php if ( $policy_url ) : ?>
-                    <a href="<?php echo esc_url( $policy_url ); ?>" class="scudo-banner__link" target="_blank" rel="noopener"><?php esc_html_e( 'Cookie policy completa', 'scudo' ); ?></a>
+                <?php if ( $policy_url || $privacy_url ) : ?>
+                    <span class="scudo-banner__links">
+                        <?php if ( $policy_url ) : ?>
+                            <a href="<?php echo esc_url( $policy_url ); ?>" class="scudo-banner__link" target="_blank" rel="noopener"><?php esc_html_e( 'Cookie Policy', 'scudo' ); ?></a>
+                        <?php endif; ?>
+                        <?php if ( $privacy_url ) : ?>
+                            <a href="<?php echo esc_url( $privacy_url ); ?>" class="scudo-banner__link" target="_blank" rel="noopener"><?php esc_html_e( 'Privacy Policy', 'scudo' ); ?></a>
+                        <?php endif; ?>
+                    </span>
                 <?php endif; ?>
             </p>
         </div>
@@ -171,11 +185,19 @@ class Scudo_Banner {
     /* ── CSS dinamico per colori custom ──────────────────────────── */
 
     private static function generate_custom_css( array $options ): string {
-        $bg      = sanitize_hex_color( $options['color_bg'] ) ?: '#1a1a2e';
-        $text    = sanitize_hex_color( $options['color_text'] ) ?: '#ffffff';
-        $accent  = sanitize_hex_color( $options['color_accent'] ) ?: '#e94560';
-        $accept  = sanitize_hex_color( $options['color_accept'] ) ?: '#0f9b58';
-        $reject  = sanitize_hex_color( $options['color_reject'] ) ?: '#5f6368';
+        $theme = $options['color_theme'] ?? 'dark';
+
+        if ( $theme === 'light' ) {
+            $bg = '#ffffff'; $text = '#1a1a2e'; $accent = '#2271b1'; $accept = '#1a1a2e'; $reject = '#1a1a2e';
+        } elseif ( $theme === 'dark' ) {
+            $bg = '#1a1a2e'; $text = '#ffffff'; $accent = '#e94560'; $accept = '#ffffff'; $reject = '#ffffff';
+        } else {
+            $bg      = sanitize_hex_color( $options['color_bg'] ) ?: '#1a1a2e';
+            $text    = sanitize_hex_color( $options['color_text'] ) ?: '#ffffff';
+            $accent  = sanitize_hex_color( $options['color_accent'] ) ?: '#e94560';
+            $accept  = sanitize_hex_color( $options['color_accept'] ) ?: '#ffffff';
+            $reject  = sanitize_hex_color( $options['color_reject'] ) ?: '#ffffff';
+        }
 
         return ":root{"
             . "--gdpr-bg:{$bg};"

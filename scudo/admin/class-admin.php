@@ -65,6 +65,8 @@ class Scudo_Admin {
         $clean['banner_position'] = in_array( $input['banner_position'] ?? '', [ 'top', 'bottom' ], true )
             ? $input['banner_position'] : 'bottom';
         $clean['policy_page'] = absint( $input['policy_page'] ?? 0 );
+        $clean['color_theme'] = in_array( $input['color_theme'] ?? '', [ 'dark', 'light', 'custom' ], true )
+            ? $input['color_theme'] : 'dark';
 
         // Numeri
         $clean['consent_expiry'] = max( 1, min( 365, absint( $input['consent_expiry'] ?? 180 ) ) );
@@ -106,11 +108,49 @@ class Scudo_Admin {
 
         $options = scudo_options();
         $stats   = Scudo_Consent::get_stats( 30 );
+        $tab     = sanitize_text_field( $_GET['tab'] ?? 'dashboard' );
         ?>
         <div class="wrap">
-            <h1><?php esc_html_e( 'Scudo — Impostazioni', 'scudo' ); ?></h1>
+            <style>
+                .scudo-toggle { position:relative; display:inline-flex; align-items:center; gap:10px; cursor:pointer; font-size:13px; line-height:1.4; }
+                .scudo-toggle input[type="checkbox"] { position:absolute; opacity:0; width:0; height:0; }
+                .scudo-toggle .scudo-toggle__track { position:relative; width:40px; height:22px; background:#ccd0d4; border-radius:11px; transition: background .2s ease; flex-shrink:0; }
+                .scudo-toggle .scudo-toggle__track::after { content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); transition: transform .2s ease; }
+                .scudo-toggle input:checked + .scudo-toggle__track { background:#0f9b58; }
+                .scudo-toggle input:checked + .scudo-toggle__track::after { transform:translateX(18px); }
+                .scudo-toggle input:focus-visible + .scudo-toggle__track { outline:2px solid #2271b1; outline-offset:2px; }
+                .scudo-check { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; margin:6px 0; }
+                .scudo-check input[type="checkbox"] { position:absolute; opacity:0; width:0; height:0; }
+                .scudo-check .scudo-check__box { width:20px; height:20px; border:2px solid #8c8f94; border-radius:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition: background .15s ease, border-color .15s ease; }
+                .scudo-check .scudo-check__box svg { opacity:0; transition: opacity .15s ease; }
+                .scudo-check input:checked + .scudo-check__box { background:#0f9b58; border-color:#0f9b58; }
+                .scudo-check input:checked + .scudo-check__box svg { opacity:1; }
+                .scudo-check input:focus-visible + .scudo-check__box { outline:2px solid #2271b1; outline-offset:2px; }
+                .scudo-tab-content { display:none; } .scudo-tab-content.active { display:block; }
+            </style>
+            <h1><?php esc_html_e( 'Scudo — Compliance GDPR leggera. Davvero.', 'scudo' ); ?></h1>
 
-            <!-- Statistiche consensi -->
+            <!-- Tab Navigation -->
+            <?php
+            $tabs = [
+                'dashboard' => __( 'Dashboard', 'scudo' ),
+                'banner'    => __( 'Banner e Testi', 'scudo' ),
+                'consent'   => __( 'Consenso e Blocco', 'scudo' ),
+                'shortcodes' => __( 'Shortcode', 'scudo' ),
+                'tools'     => __( 'Strumenti', 'scudo' ),
+            ];
+            ?>
+            <nav class="nav-tab-wrapper" style="margin-bottom:20px;">
+                <?php foreach ( $tabs as $slug => $label ) : ?>
+                    <a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=' . $slug ) ); ?>"
+                       class="nav-tab <?php echo $tab === $slug ? 'nav-tab-active' : ''; ?>">
+                        <?php echo esc_html( $label ); ?>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
+
+            <?php if ( $tab === 'dashboard' ) : ?>
+            <!-- ═══ TAB: DASHBOARD ═══ -->
             <div class="scudo-admin-stats" style="display:flex;gap:16px;margin:20px 0;flex-wrap:wrap;">
                 <?php
                 $stat_items = [
@@ -119,8 +159,7 @@ class Scudo_Admin {
                     [ 'label' => __( 'Rifiuta tutti', 'scudo' ), 'value' => $stats['reject_all'], 'color' => '#e94560' ],
                     [ 'label' => __( 'Personalizzati', 'scudo' ), 'value' => $stats['custom'], 'color' => '#f59e0b' ],
                 ];
-                foreach ( $stat_items as $item ) :
-                    ?>
+                foreach ( $stat_items as $item ) : ?>
                     <div style="background:#fff;border:1px solid #c3c4c7;border-left:4px solid <?php echo esc_attr( $item['color'] ); ?>;border-radius:4px;padding:12px 20px;min-width:160px;">
                         <div style="font-size:28px;font-weight:700;color:<?php echo esc_attr( $item['color'] ); ?>;"><?php echo esc_html( number_format_i18n( $item['value'] ) ); ?></div>
                         <div style="font-size:13px;color:#50575e;"><?php echo esc_html( $item['label'] ); ?></div>
@@ -135,21 +174,17 @@ class Scudo_Admin {
             </p>
 
             <?php
-            // Richieste diritti degli interessati
             $requests = class_exists( 'Scudo_Rights' ) ? Scudo_Rights::get_requests( 10 ) : [];
-            if ( ! empty( $requests ) ) :
-            ?>
+            if ( ! empty( $requests ) ) : ?>
             <h2 class="title" style="margin-top:24px;"><?php esc_html_e( 'Ultime richieste diritti GDPR', 'scudo' ); ?></h2>
             <table class="widefat striped" style="max-width:900px;">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e( 'Data', 'scudo' ); ?></th>
-                        <th><?php esc_html_e( 'Tipo', 'scudo' ); ?></th>
-                        <th><?php esc_html_e( 'Nome', 'scudo' ); ?></th>
-                        <th><?php esc_html_e( 'Email', 'scudo' ); ?></th>
-                        <th><?php esc_html_e( 'Stato', 'scudo' ); ?></th>
-                    </tr>
-                </thead>
+                <thead><tr>
+                    <th><?php esc_html_e( 'Data', 'scudo' ); ?></th>
+                    <th><?php esc_html_e( 'Tipo', 'scudo' ); ?></th>
+                    <th><?php esc_html_e( 'Nome', 'scudo' ); ?></th>
+                    <th><?php esc_html_e( 'Email', 'scudo' ); ?></th>
+                    <th><?php esc_html_e( 'Stato', 'scudo' ); ?></th>
+                </tr></thead>
                 <tbody>
                     <?php foreach ( $requests as $req ) : ?>
                     <tr>
@@ -157,172 +192,353 @@ class Scudo_Admin {
                         <td><?php echo esc_html( ucfirst( $req['request_type'] ) ); ?></td>
                         <td><?php echo esc_html( $req['name'] ); ?></td>
                         <td><?php echo esc_html( $req['email'] ); ?></td>
-                        <td>
-                            <?php if ( $req['status'] === 'pending' ) : ?>
-                                <span style="color:#f59e0b;font-weight:600;"><?php esc_html_e( 'In attesa', 'scudo' ); ?></span>
-                            <?php else : ?>
-                                <span style="color:#0f9b58;font-weight:600;"><?php esc_html_e( 'Completata', 'scudo' ); ?></span>
-                            <?php endif; ?>
-                        </td>
+                        <td><?php echo $req['status'] === 'pending' ? '<span style="color:#f59e0b;font-weight:600;">' . esc_html__( 'In attesa', 'scudo' ) . '</span>' : '<span style="color:#0f9b58;font-weight:600;">' . esc_html__( 'Completata', 'scudo' ) . '</span>'; ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <p class="description"><?php esc_html_e( 'Per far esercitare i diritti agli utenti, usa lo shortcode [scudo_rights_form] in una pagina.', 'scudo' ); ?></p>
-            <?php else : ?>
-            <p class="description" style="margin-top:16px;">
-                <?php esc_html_e( 'Per far esercitare i diritti agli utenti, usa lo shortcode [scudo_rights_form] in una pagina.', 'scudo' ); ?>
-            </p>
             <?php endif; ?>
 
-            <form method="post" action="options.php">
+            <?php elseif ( $tab === 'shortcodes' ) : ?>
+            <!-- ═══ TAB: SHORTCODE ═══ -->
+
+            <div class="postbox" style="max-width:900px;">
+                <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Tabella Cookie', 'scudo' ); ?></h2></div>
+                <div class="inside">
+                    <code style="display:block;font-size:14px;padding:10px 14px;background:#f0f0f1;border-radius:4px;margin-bottom:10px;">[scudo_cookie_table]</code>
+                    <p class="description"><?php esc_html_e( 'Inseriscilo nella pagina Cookie Policy. Mostra automaticamente la tabella di tutti i cookie rilevati dalla scansione, organizzati per categoria (necessari, analitici, marketing, preferenze) con nome, fornitore, durata e descrizione.', 'scudo' ); ?></p>
+                </div>
+            </div>
+
+            <div class="postbox" style="max-width:900px;">
+                <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Privacy Policy', 'scudo' ); ?></h2></div>
+                <div class="inside">
+                    <code style="display:block;font-size:14px;padding:10px 14px;background:#f0f0f1;border-radius:4px;margin-bottom:10px;">[scudo_privacy_policy]</code>
+                    <p class="description"><?php esc_html_e( 'Inseriscilo nella pagina Privacy Policy. Mostra l\'informativa completa generata dal wizard (tab Strumenti), conforme agli Artt. 13-14 del GDPR. Si aggiorna automaticamente quando modifichi i dati nel wizard.', 'scudo' ); ?></p>
+                </div>
+            </div>
+
+            <div class="postbox" style="max-width:900px;">
+                <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Form Diritti GDPR', 'scudo' ); ?></h2></div>
+                <div class="inside">
+                    <code style="display:block;font-size:14px;padding:10px 14px;background:#f0f0f1;border-radius:4px;margin-bottom:10px;">[scudo_rights_form]</code>
+                    <p class="description"><?php esc_html_e( 'Inseriscilo in una pagina dedicata (es. "Esercita i tuoi diritti"). Mostra un form dove i visitatori possono richiedere accesso, rettifica, cancellazione, portabilità o opposizione ai propri dati. Le richieste arrivano via email e compaiono nella Dashboard.', 'scudo' ); ?></p>
+                </div>
+            </div>
+
+            <?php elseif ( $tab === 'banner' ) : ?>
+            <!-- ═══ TAB: BANNER E TESTI ═══ -->
+
+            <form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
                 <?php settings_fields( self::OPTION_GROUP ); ?>
+                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=banner' ) ); ?>">
+                <?php // Preserva valori delle altre tab ?>
+                <input type="hidden" name="scudo_options[cat_analytics_label]" value="<?php echo esc_attr( $options['cat_analytics_label'] ); ?>">
+                <input type="hidden" name="scudo_options[cat_analytics_desc]" value="<?php echo esc_attr( $options['cat_analytics_desc'] ); ?>">
+                <input type="hidden" name="scudo_options[cat_marketing_label]" value="<?php echo esc_attr( $options['cat_marketing_label'] ); ?>">
+                <input type="hidden" name="scudo_options[cat_marketing_desc]" value="<?php echo esc_attr( $options['cat_marketing_desc'] ); ?>">
+                <input type="hidden" name="scudo_options[cat_preferences_label]" value="<?php echo esc_attr( $options['cat_preferences_label'] ); ?>">
+                <input type="hidden" name="scudo_options[cat_preferences_desc]" value="<?php echo esc_attr( $options['cat_preferences_desc'] ); ?>">
+                <input type="hidden" name="scudo_options[consent_expiry]" value="<?php echo esc_attr( $options['consent_expiry'] ); ?>">
+                <input type="hidden" name="scudo_options[consent_logging]" value="<?php echo $options['consent_logging'] ? '1' : ''; ?>">
+                <input type="hidden" name="scudo_options[gcm_enabled]" value="<?php echo $options['gcm_enabled'] ? '1' : ''; ?>">
+                <input type="hidden" name="scudo_options[custom_block_patterns]" value="<?php echo esc_attr( $options['custom_block_patterns'] ); ?>">
 
-                <!-- Banner -->
-                <h2 class="title"><?php esc_html_e( 'Banner', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="banner_position"><?php esc_html_e( 'Posizione', 'scudo' ); ?></label></th>
-                        <td>
-                            <select name="scudo_options[banner_position]" id="banner_position">
-                                <option value="bottom" <?php selected( $options['banner_position'], 'bottom' ); ?>><?php esc_html_e( 'In basso', 'scudo' ); ?></option>
-                                <option value="top" <?php selected( $options['banner_position'], 'top' ); ?>><?php esc_html_e( 'In alto', 'scudo' ); ?></option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="banner_title"><?php esc_html_e( 'Titolo', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[banner_title]" id="banner_title" value="<?php echo esc_attr( $options['banner_title'] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="banner_text"><?php esc_html_e( 'Testo', 'scudo' ); ?></label></th>
-                        <td><textarea name="scudo_options[banner_text]" id="banner_text" rows="3" class="large-text"><?php echo esc_textarea( $options['banner_text'] ); ?></textarea></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="accept_text"><?php esc_html_e( 'Testo "Accetta"', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[accept_text]" id="accept_text" value="<?php echo esc_attr( $options['accept_text'] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="reject_text"><?php esc_html_e( 'Testo "Rifiuta"', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[reject_text]" id="reject_text" value="<?php echo esc_attr( $options['reject_text'] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="customize_text"><?php esc_html_e( 'Testo "Personalizza"', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[customize_text]" id="customize_text" value="<?php echo esc_attr( $options['customize_text'] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="save_text"><?php esc_html_e( 'Testo "Salva preferenze"', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[save_text]" id="save_text" value="<?php echo esc_attr( $options['save_text'] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="policy_page"><?php esc_html_e( 'Pagina Cookie Policy', 'scudo' ); ?></label></th>
-                        <td>
-                            <?php wp_dropdown_pages( [
-                                'name'              => 'scudo_options[policy_page]',
-                                'id'                => 'policy_page',
-                                'selected'          => $options['policy_page'],
-                                'show_option_none'  => __( '— Seleziona —', 'scudo' ),
-                                'option_none_value' => 0,
-                            ] ); ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e( 'Widget riapertura', 'scudo' ); ?></th>
-                        <td>
-                            <label><input type="checkbox" name="scudo_options[show_reopen_widget]" value="1" <?php checked( $options['show_reopen_widget'] ); ?>>
-                            <?php esc_html_e( 'Mostra icona per riaprire le preferenze cookie', 'scudo' ); ?></label>
-                        </td>
-                    </tr>
-                </table>
+                <!-- Card: Contenuto del banner -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Contenuto del banner', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php esc_html_e( 'Il testo che il visitatore vede quando arriva sul sito per la prima volta.', 'scudo' ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="banner_title"><?php esc_html_e( 'Titolo', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[banner_title]" id="banner_title" value="<?php echo esc_attr( $options['banner_title'] ); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="banner_text"><?php esc_html_e( 'Messaggio', 'scudo' ); ?></label></th>
+                                <td><textarea name="scudo_options[banner_text]" id="banner_text" rows="3" class="large-text"><?php echo esc_textarea( $options['banner_text'] ); ?></textarea></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
 
-                <!-- Categorie Cookie -->
-                <h2 class="title"><?php esc_html_e( 'Categorie Cookie', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <?php
-                    $cats = [
-                        'analytics'   => __( 'Analitici', 'scudo' ),
-                        'marketing'   => __( 'Marketing', 'scudo' ),
-                        'preferences' => __( 'Preferenze', 'scudo' ),
-                    ];
-                    foreach ( $cats as $slug => $default_label ) : ?>
-                    <tr>
-                        <th scope="row"><label for="cat_<?php echo $slug; ?>_label"><?php echo esc_html( $default_label ); ?> — <?php esc_html_e( 'Nome', 'scudo' ); ?></label></th>
-                        <td><input type="text" name="scudo_options[cat_<?php echo $slug; ?>_label]" id="cat_<?php echo $slug; ?>_label" value="<?php echo esc_attr( $options[ 'cat_' . $slug . '_label' ] ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><label for="cat_<?php echo $slug; ?>_desc"><?php echo esc_html( $default_label ); ?> — <?php esc_html_e( 'Descrizione', 'scudo' ); ?></label></th>
-                        <td><textarea name="scudo_options[cat_<?php echo $slug; ?>_desc]" id="cat_<?php echo $slug; ?>_desc" rows="2" class="large-text"><?php echo esc_textarea( $options[ 'cat_' . $slug . '_desc' ] ); ?></textarea></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </table>
+                <!-- Card: Testi dei pulsanti -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Testi dei pulsanti', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php esc_html_e( 'I pulsanti Accetta e Rifiuta hanno automaticamente la stessa evidenza grafica, come richiesto dal Garante.', 'scudo' ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="accept_text"><?php esc_html_e( 'Accetta tutti', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[accept_text]" id="accept_text" value="<?php echo esc_attr( $options['accept_text'] ); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="reject_text"><?php esc_html_e( 'Rifiuta tutti', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[reject_text]" id="reject_text" value="<?php echo esc_attr( $options['reject_text'] ); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="customize_text"><?php esc_html_e( 'Personalizza', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[customize_text]" id="customize_text" value="<?php echo esc_attr( $options['customize_text'] ); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="save_text"><?php esc_html_e( 'Salva preferenze', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[save_text]" id="save_text" value="<?php echo esc_attr( $options['save_text'] ); ?>" class="regular-text"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
 
-                <!-- Consenso -->
-                <h2 class="title"><?php esc_html_e( 'Consenso', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="consent_expiry"><?php esc_html_e( 'Durata consenso (giorni)', 'scudo' ); ?></label></th>
-                        <td>
-                            <input type="number" name="scudo_options[consent_expiry]" id="consent_expiry" value="<?php echo esc_attr( $options['consent_expiry'] ); ?>" min="1" max="365" class="small-text">
-                            <p class="description"><?php esc_html_e( 'Il Garante Privacy consiglia 180 giorni (6 mesi).', 'scudo' ); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row"><?php esc_html_e( 'Registrazione consensi', 'scudo' ); ?></th>
-                        <td>
-                            <label><input type="checkbox" name="scudo_options[consent_logging]" value="1" <?php checked( $options['consent_logging'] ); ?>>
-                            <?php esc_html_e( 'Registra i consensi nel database (prova legale)', 'scudo' ); ?></label>
-                        </td>
-                    </tr>
-                </table>
+                <!-- Card: Impostazioni generali -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Impostazioni del banner', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="banner_position"><?php esc_html_e( 'Posizione', 'scudo' ); ?></label></th>
+                                <td>
+                                    <select name="scudo_options[banner_position]" id="banner_position">
+                                        <option value="bottom" <?php selected( $options['banner_position'], 'bottom' ); ?>><?php esc_html_e( 'In basso (consigliato)', 'scudo' ); ?></option>
+                                        <option value="top" <?php selected( $options['banner_position'], 'top' ); ?>><?php esc_html_e( 'In alto', 'scudo' ); ?></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="policy_page"><?php esc_html_e( 'Pagina Cookie Policy', 'scudo' ); ?></label></th>
+                                <td>
+                                    <?php wp_dropdown_pages( [
+                                        'name'              => 'scudo_options[policy_page]',
+                                        'id'                => 'policy_page',
+                                        'selected'          => $options['policy_page'],
+                                        'show_option_none'  => __( '— Seleziona una pagina —', 'scudo' ),
+                                        'option_none_value' => 0,
+                                    ] ); ?>
+                                    <p class="description"><?php esc_html_e( 'Il banner inserisce un link a questa pagina. Puoi usare [scudo_cookie_table] al suo interno.', 'scudo' ); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e( 'Icona riapertura', 'scudo' ); ?></th>
+                                <td>
+                                    <label class="scudo-toggle">
+                                        <input type="checkbox" name="scudo_options[show_reopen_widget]" value="1" <?php checked( $options['show_reopen_widget'] ); ?>>
+                                        <span class="scudo-toggle__track"></span>
+                                        <?php esc_html_e( 'Mostra l\'icona cookie in basso a sinistra per riaprire le preferenze', 'scudo' ); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
 
-                <!-- Google Consent Mode v2 -->
-                <h2 class="title"><?php esc_html_e( 'Google Consent Mode v2', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><?php esc_html_e( 'Attiva GCM v2', 'scudo' ); ?></th>
-                        <td>
-                            <label><input type="checkbox" name="scudo_options[gcm_enabled]" value="1" <?php checked( $options['gcm_enabled'] ); ?>>
-                            <?php esc_html_e( 'Abilita Google Consent Mode v2 (Basic mode)', 'scudo' ); ?></label>
-                            <p class="description"><?php esc_html_e( 'Imposta automaticamente i default su "denied" e li aggiorna dopo il consenso. Richiesto per Google Ads e GA4 nell\'EEA.', 'scudo' ); ?></p>
-                        </td>
-                    </tr>
-                </table>
+                <!-- Card: Tema e Colori -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Tema del banner', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+                            <?php
+                            $themes = [
+                                'dark'   => [
+                                    'label' => __( 'Scuro', 'scudo' ),
+                                    'bg' => '#1a1a2e', 'text' => '#fff', 'btn' => '#fff', 'btn_text' => '#1a1a2e',
+                                ],
+                                'light'  => [
+                                    'label' => __( 'Chiaro', 'scudo' ),
+                                    'bg' => '#ffffff', 'text' => '#1a1a2e', 'btn' => '#1a1a2e', 'btn_text' => '#fff',
+                                ],
+                                'custom' => [
+                                    'label' => __( 'Personalizzato', 'scudo' ),
+                                    'bg' => 'linear-gradient(135deg,#667eea,#764ba2)', 'text' => '#fff', 'btn' => '#fff', 'btn_text' => '#333',
+                                ],
+                            ];
+                            foreach ( $themes as $theme_key => $theme_data ) :
+                                $is_active = ( $options['color_theme'] ?? 'dark' ) === $theme_key;
+                            ?>
+                            <label style="cursor:pointer;display:block;">
+                                <input type="radio" name="scudo_options[color_theme]" value="<?php echo esc_attr( $theme_key ); ?>" <?php checked( $is_active ); ?> style="display:none;" class="scudo-theme-radio">
+                                <div style="width:220px;border:3px solid <?php echo $is_active ? '#2271b1' : '#c3c4c7'; ?>;border-radius:8px;overflow:hidden;transition:border-color .2s;">
+                                    <!-- Mini preview -->
+                                    <div style="background:<?php echo $theme_data['bg']; ?>;padding:14px 16px;min-height:80px;display:flex;flex-direction:column;justify-content:space-between;">
+                                        <div>
+                                            <div style="color:<?php echo $theme_data['text']; ?>;font-size:11px;font-weight:700;margin-bottom:2px;"><?php esc_html_e( 'Questo sito utilizza i cookie', 'scudo' ); ?></div>
+                                            <div style="color:<?php echo $theme_data['text']; ?>;font-size:9px;opacity:0.7;"><?php esc_html_e( 'Utilizziamo cookie tecnici e...', 'scudo' ); ?></div>
+                                        </div>
+                                        <div style="display:flex;gap:6px;margin-top:10px;">
+                                            <span style="background:<?php echo $theme_data['btn']; ?>;color:<?php echo $theme_data['btn_text']; ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Accetta', 'scudo' ); ?></span>
+                                            <span style="background:<?php echo $theme_data['btn']; ?>;color:<?php echo $theme_data['btn_text']; ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Rifiuta', 'scudo' ); ?></span>
+                                        </div>
+                                    </div>
+                                    <div style="padding:8px 12px;background:#f9fafb;text-align:center;font-size:12px;font-weight:600;color:<?php echo $is_active ? '#2271b1' : '#50575e'; ?>;">
+                                        <?php echo esc_html( $theme_data['label'] ); ?>
+                                    </div>
+                                </div>
+                            </label>
+                            <?php endforeach; ?>
+                        </div>
 
-                <!-- Blocco Script -->
-                <h2 class="title"><?php esc_html_e( 'Blocco Script', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><label for="custom_block_patterns"><?php esc_html_e( 'Pattern personalizzati', 'scudo' ); ?></label></th>
-                        <td>
-                            <textarea name="scudo_options[custom_block_patterns]" id="custom_block_patterns" rows="5" class="large-text code"><?php echo esc_textarea( $options['custom_block_patterns'] ); ?></textarea>
-                            <p class="description"><?php esc_html_e( 'Un pattern per riga. Gli script che contengono questi pattern verranno bloccati come "marketing". Es: tracking.example.com', 'scudo' ); ?></p>
-                        </td>
-                    </tr>
-                </table>
+                        <!-- Color pickers (visibili solo con tema "custom") -->
+                        <div id="scudo-custom-colors" style="<?php echo ( $options['color_theme'] ?? 'dark' ) === 'custom' ? '' : 'display:none;'; ?>">
+                            <p class="description" style="margin-bottom:12px;"><?php esc_html_e( 'Scegli i colori per adattare il banner al design del tuo sito.', 'scudo' ); ?></p>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;">
+                                <?php
+                                $colors = [
+                                    'color_bg'     => __( 'Sfondo', 'scudo' ),
+                                    'color_text'   => __( 'Testo', 'scudo' ),
+                                    'color_accent' => __( 'Accento / Link', 'scudo' ),
+                                    'color_accept' => __( 'Pulsante Accetta', 'scudo' ),
+                                    'color_reject' => __( 'Pulsante Rifiuta', 'scudo' ),
+                                ];
+                                foreach ( $colors as $key => $label ) : ?>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <input type="color" name="scudo_options[<?php echo $key; ?>]" id="<?php echo $key; ?>" value="<?php echo esc_attr( $options[ $key ] ); ?>" style="width:40px;height:34px;border:1px solid #c3c4c7;border-radius:4px;padding:2px;cursor:pointer;">
+                                    <label for="<?php echo $key; ?>" style="font-size:13px;"><?php echo esc_html( $label ); ?></label>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
 
-                <!-- Colori -->
-                <h2 class="title"><?php esc_html_e( 'Colori', 'scudo' ); ?></h2>
-                <table class="form-table">
-                    <?php
-                    $colors = [
-                        'color_bg'     => __( 'Sfondo banner', 'scudo' ),
-                        'color_text'   => __( 'Testo banner', 'scudo' ),
-                        'color_accent' => __( 'Accento (link, focus)', 'scudo' ),
-                        'color_accept' => __( 'Pulsante Accetta', 'scudo' ),
-                        'color_reject' => __( 'Pulsante Rifiuta', 'scudo' ),
-                    ];
-                    foreach ( $colors as $key => $label ) : ?>
-                    <tr>
-                        <th scope="row"><label for="<?php echo $key; ?>"><?php echo esc_html( $label ); ?></label></th>
-                        <td><input type="color" name="scudo_options[<?php echo $key; ?>]" id="<?php echo $key; ?>" value="<?php echo esc_attr( $options[ $key ] ); ?>"></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </table>
+                        <script>
+                        (function(){
+                            var radios = document.querySelectorAll('.scudo-theme-radio');
+                            var customPanel = document.getElementById('scudo-custom-colors');
+                            radios.forEach(function(r){
+                                r.addEventListener('change', function(){
+                                    // Update border visuals
+                                    document.querySelectorAll('.scudo-theme-radio').forEach(function(rr){
+                                        rr.closest('label').querySelector('div').style.borderColor = '#c3c4c7';
+                                        rr.closest('label').querySelector('div > div:last-child').style.color = '#50575e';
+                                    });
+                                    this.closest('label').querySelector('div').style.borderColor = '#2271b1';
+                                    this.closest('label').querySelector('div > div:last-child').style.color = '#2271b1';
+                                    // Toggle custom colors
+                                    customPanel.style.display = this.value === 'custom' ? '' : 'none';
+                                });
+                            });
+                        })();
+                        </script>
+                    </div>
+                </div>
 
                 <?php submit_button( __( 'Salva impostazioni', 'scudo' ) ); ?>
             </form>
 
-            <hr>
+            <?php elseif ( $tab === 'consent' ) : ?>
+            <!-- ═══ TAB: CONSENSO E BLOCCO ═══ -->
+            <form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
+                <?php settings_fields( self::OPTION_GROUP ); ?>
+                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=consent' ) ); ?>">
+                <?php // Hidden fields per preservare i valori delle altre tab ?>
+                <input type="hidden" name="scudo_options[banner_position]" value="<?php echo esc_attr( $options['banner_position'] ); ?>">
+                <input type="hidden" name="scudo_options[banner_title]" value="<?php echo esc_attr( $options['banner_title'] ); ?>">
+                <input type="hidden" name="scudo_options[banner_text]" value="<?php echo esc_attr( $options['banner_text'] ); ?>">
+                <input type="hidden" name="scudo_options[accept_text]" value="<?php echo esc_attr( $options['accept_text'] ); ?>">
+                <input type="hidden" name="scudo_options[reject_text]" value="<?php echo esc_attr( $options['reject_text'] ); ?>">
+                <input type="hidden" name="scudo_options[customize_text]" value="<?php echo esc_attr( $options['customize_text'] ); ?>">
+                <input type="hidden" name="scudo_options[save_text]" value="<?php echo esc_attr( $options['save_text'] ); ?>">
+                <input type="hidden" name="scudo_options[policy_page]" value="<?php echo esc_attr( $options['policy_page'] ); ?>">
+                <input type="hidden" name="scudo_options[show_reopen_widget]" value="<?php echo $options['show_reopen_widget'] ? '1' : ''; ?>">
+                <input type="hidden" name="scudo_options[color_theme]" value="<?php echo esc_attr( $options['color_theme'] ); ?>">
+                <input type="hidden" name="scudo_options[color_bg]" value="<?php echo esc_attr( $options['color_bg'] ); ?>">
+                <input type="hidden" name="scudo_options[color_text]" value="<?php echo esc_attr( $options['color_text'] ); ?>">
+                <input type="hidden" name="scudo_options[color_accent]" value="<?php echo esc_attr( $options['color_accent'] ); ?>">
+                <input type="hidden" name="scudo_options[color_accept]" value="<?php echo esc_attr( $options['color_accept'] ); ?>">
+                <input type="hidden" name="scudo_options[color_reject]" value="<?php echo esc_attr( $options['color_reject'] ); ?>">
+
+                <!-- Card: Categorie Cookie -->
+                <?php
+                $cats = [
+                    'analytics'   => [ __( 'Analitici', 'scudo' ), __( 'Google Analytics, Hotjar, Clarity e simili', 'scudo' ) ],
+                    'marketing'   => [ __( 'Marketing', 'scudo' ), __( 'Facebook Pixel, Google Ads, YouTube, social embed', 'scudo' ) ],
+                    'preferences' => [ __( 'Preferenze', 'scudo' ), __( 'Google Fonts, widget di personalizzazione', 'scudo' ) ],
+                ];
+                foreach ( $cats as $slug => $cat_info ) : ?>
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php printf( esc_html__( 'Categoria: %s', 'scudo' ), esc_html( $cat_info[0] ) ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php echo esc_html( $cat_info[1] ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="cat_<?php echo $slug; ?>_label"><?php esc_html_e( 'Nome visibile', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[cat_<?php echo $slug; ?>_label]" id="cat_<?php echo $slug; ?>_label" value="<?php echo esc_attr( $options[ 'cat_' . $slug . '_label' ] ); ?>" class="regular-text"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="cat_<?php echo $slug; ?>_desc"><?php esc_html_e( 'Descrizione', 'scudo' ); ?></label></th>
+                                <td><textarea name="scudo_options[cat_<?php echo $slug; ?>_desc]" id="cat_<?php echo $slug; ?>_desc" rows="2" class="large-text"><?php echo esc_textarea( $options[ 'cat_' . $slug . '_desc' ] ); ?></textarea></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+
+                <!-- Card: Gestione consenso -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Gestione del consenso', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php esc_html_e( 'Scudo salva ogni consenso come prova legale per il Garante Privacy.', 'scudo' ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="consent_expiry"><?php esc_html_e( 'Scadenza', 'scudo' ); ?></label></th>
+                                <td>
+                                    <input type="number" name="scudo_options[consent_expiry]" id="consent_expiry" value="<?php echo esc_attr( $options['consent_expiry'] ); ?>" min="1" max="365" class="small-text"> <?php esc_html_e( 'giorni', 'scudo' ); ?>
+                                    <p class="description"><?php esc_html_e( 'Dopo quanti giorni il banner riappare. Il Garante raccomanda 180 (6 mesi).', 'scudo' ); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e( 'Registro', 'scudo' ); ?></th>
+                                <td>
+                                    <label class="scudo-toggle">
+                                        <input type="checkbox" name="scudo_options[consent_logging]" value="1" <?php checked( $options['consent_logging'] ); ?>>
+                                        <span class="scudo-toggle__track"></span>
+                                        <?php esc_html_e( 'Salva ogni consenso nel database', 'scudo' ); ?>
+                                    </label>
+                                    <p class="description"><?php esc_html_e( 'Registra data, ora, scelte e versione policy. L\'IP viene hashato per privacy. Prova legale in caso di ispezione.', 'scudo' ); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card: Google Consent Mode v2 -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Google Consent Mode v2', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php esc_html_e( 'Il protocollo con cui Scudo comunica a Google lo stato del consenso. Obbligatorio dal marzo 2024 per chi usa Google Ads nell\'EEA.', 'scudo' ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><?php esc_html_e( 'Stato', 'scudo' ); ?></th>
+                                <td>
+                                    <label class="scudo-toggle">
+                                        <input type="checkbox" name="scudo_options[gcm_enabled]" value="1" <?php checked( $options['gcm_enabled'] ); ?>>
+                                        <span class="scudo-toggle__track"></span>
+                                        <?php esc_html_e( 'Attiva Google Consent Mode v2 (Basic mode)', 'scudo' ); ?>
+                                    </label>
+                                    <p class="description"><?php esc_html_e( 'Attivalo se usi Google Analytics o Google Ads. Scudo imposta tutto su "denied" e aggiorna dopo il consenso.', 'scudo' ); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Card: Blocco script -->
+                <div class="postbox" style="max-width:900px;">
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php esc_html_e( 'Blocco preventivo degli script', 'scudo' ); ?></h2></div>
+                    <div class="inside">
+                        <p class="description"><?php esc_html_e( 'Scudo blocca automaticamente 30+ servizi (GA, Facebook Pixel, YouTube, ecc.). Aggiungi qui quelli non ancora nella lista.', 'scudo' ); ?></p>
+                        <table class="form-table" style="margin-top:0;">
+                            <tr>
+                                <th scope="row"><label for="custom_block_patterns"><?php esc_html_e( 'Servizi aggiuntivi', 'scudo' ); ?></label></th>
+                                <td>
+                                    <textarea name="scudo_options[custom_block_patterns]" id="custom_block_patterns" rows="4" class="large-text code"><?php echo esc_textarea( $options['custom_block_patterns'] ); ?></textarea>
+                                    <p class="description"><?php esc_html_e( 'Un dominio per riga. Es: tracking.mioservizio.com — verranno bloccati come "marketing".', 'scudo' ); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <?php submit_button( __( 'Salva impostazioni', 'scudo' ) ); ?>
+            </form>
+
+            <?php elseif ( $tab === 'tools' ) : ?>
+            <!-- ═══ TAB: STRUMENTI ═══ -->
 
             <!-- Scansione Cookie -->
             <h2 class="title"><?php esc_html_e( 'Scansione Cookie', 'scudo' ); ?></h2>
@@ -456,6 +672,7 @@ class Scudo_Admin {
             })();
             </script>
 
+            <?php endif; // end tabs ?>
         </div>
         <?php
     }

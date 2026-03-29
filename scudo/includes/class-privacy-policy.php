@@ -120,7 +120,11 @@ class Scudo_Privacy_Policy {
             <div class="scudo-wizard-step" style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:20px;margin:16px 0;">
                 <h3 style="margin-top:0;"><?php esc_html_e( '2. Responsabile della Protezione dei Dati (DPO)', 'scudo' ); ?></h3>
                 <p class="description"><?php esc_html_e( 'Obbligatorio per enti pubblici e organizzazioni che trattano dati su larga scala.', 'scudo' ); ?></p>
-                <label style="display:block;margin:12px 0;"><input type="checkbox" id="pp_dpo_enabled" <?php checked( $data['dpo_enabled'] ); ?>> <?php esc_html_e( 'È stato nominato un DPO', 'scudo' ); ?></label>
+                <label class="scudo-toggle" style="margin:12px 0;">
+                    <input type="checkbox" id="pp_dpo_enabled" <?php checked( $data['dpo_enabled'] ); ?>>
+                    <span class="scudo-toggle__track"></span>
+                    <?php esc_html_e( 'È stato nominato un DPO', 'scudo' ); ?>
+                </label>
                 <div id="pp_dpo_fields" style="<?php echo $data['dpo_enabled'] ? '' : 'display:none;'; ?>">
                     <table class="form-table" style="margin:0;">
                         <tr><th><label><?php esc_html_e( 'Nome DPO', 'scudo' ); ?></label></th>
@@ -147,7 +151,11 @@ class Scudo_Privacy_Policy {
                     'comments'           => __( 'Commenti sul blog', 'scudo' ),
                 ];
                 foreach ( $purpose_labels as $key => $label ) : ?>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" class="pp_purpose" data-key="<?php echo esc_attr( $key ); ?>" <?php checked( ! empty( $data['purposes'][ $key ] ) ); ?>> <?php echo esc_html( $label ); ?></label>
+                    <label class="scudo-check">
+                        <input type="checkbox" class="pp_purpose" data-key="<?php echo esc_attr( $key ); ?>" <?php checked( ! empty( $data['purposes'][ $key ] ) ); ?>>
+                        <span class="scudo-check__box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <?php echo esc_html( $label ); ?>
+                    </label>
                 <?php endforeach; ?>
             </div>
 
@@ -170,14 +178,22 @@ class Scudo_Privacy_Policy {
                     'hotjar'           => 'Hotjar (Hotjar Ltd.)',
                 ];
                 foreach ( $service_labels as $key => $label ) : ?>
-                    <label style="display:block;margin:6px 0;"><input type="checkbox" class="pp_service" data-key="<?php echo esc_attr( $key ); ?>" <?php checked( ! empty( $data['services'][ $key ] ) ); ?>> <?php echo esc_html( $label ); ?></label>
+                    <label class="scudo-check">
+                        <input type="checkbox" class="pp_service" data-key="<?php echo esc_attr( $key ); ?>" <?php checked( ! empty( $data['services'][ $key ] ) ); ?>>
+                        <span class="scudo-check__box"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <?php echo esc_html( $label ); ?>
+                    </label>
                 <?php endforeach; ?>
             </div>
 
             <!-- Step 5: Trasferimenti extra-UE -->
             <div class="scudo-wizard-step" style="background:#fff;border:1px solid #c3c4c7;border-radius:4px;padding:20px;margin:16px 0;">
                 <h3 style="margin-top:0;"><?php esc_html_e( '5. Trasferimenti dati extra-UE', 'scudo' ); ?></h3>
-                <label style="display:block;margin:12px 0;"><input type="checkbox" id="pp_transfers" <?php checked( $data['transfers_extra_eu'] ); ?>> <?php esc_html_e( 'I dati vengono trasferiti fuori dallo Spazio Economico Europeo', 'scudo' ); ?></label>
+                <label class="scudo-toggle" style="margin:12px 0;">
+                    <input type="checkbox" id="pp_transfers" <?php checked( $data['transfers_extra_eu'] ); ?>>
+                    <span class="scudo-toggle__track"></span>
+                    <?php esc_html_e( 'I dati vengono trasferiti fuori dallo Spazio Economico Europeo', 'scudo' ); ?>
+                </label>
                 <div id="pp_transfers_fields" style="<?php echo $data['transfers_extra_eu'] ? '' : 'display:none;'; ?>">
                     <p><?php esc_html_e( 'Base giuridica del trasferimento:', 'scudo' ); ?></p>
                     <label style="display:block;margin:4px 0;"><input type="radio" name="pp_transfers_basis" value="dpf" <?php checked( $data['transfers_basis'], 'dpf' ); ?>> <?php esc_html_e( 'EU-US Data Privacy Framework (aziende certificate)', 'scudo' ); ?></label>

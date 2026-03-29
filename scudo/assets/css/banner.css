@@ -85,10 +85,21 @@
     opacity: 0.9;
 }
 
+.scudo-banner__links {
+    display: inline;
+}
+
+.scudo-banner__links .scudo-banner__link + .scudo-banner__link::before {
+    content: ' · ';
+    opacity: 0.5;
+    text-decoration: none;
+}
+
 .scudo-banner__link {
     color: var(--gdpr-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
+    white-space: nowrap;
 }
 
 .scudo-banner__link:hover,
@@ -129,15 +140,17 @@
     outline-offset: 2px;
 }
 
-/* PARI PROMINENZA: Accetta e Rifiuta hanno stessa dimensione e peso visivo */
+/* PARI PROMINENZA: Accetta e Rifiuta hanno stessa dimensione, peso e stile */
 .scudo-btn--accept {
     background: var(--gdpr-accept);
-    color: #fff;
+    color: var(--gdpr-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .scudo-btn--reject {
     background: var(--gdpr-reject);
-    color: #fff;
+    color: var(--gdpr-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .scudo-btn--customize {

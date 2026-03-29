@@ -123,12 +123,13 @@ function scudo_defaults(): array {
         // Script da bloccare (pattern personalizzati, uno per riga)
         'custom_block_patterns' => '',
 
-        // Colori
+        // Tema e Colori
+        'color_theme'           => 'dark', // dark | light | custom
         'color_bg'              => '#1a1a2e',
         'color_text'            => '#ffffff',
         'color_accent'          => '#e94560',
-        'color_accept'          => '#0f9b58',
-        'color_reject'          => '#5f6368',
+        'color_accept'          => '#ffffff',
+        'color_reject'          => '#ffffff',
 
         // Widget riapertura
         'show_reopen_widget'    => true,
