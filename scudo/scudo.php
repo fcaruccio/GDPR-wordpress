@@ -38,6 +38,7 @@ require_once SCUDO_DIR . 'includes/class-rights.php';
 
 if ( is_admin() ) {
     require_once SCUDO_DIR . 'admin/class-admin.php';
+    require_once SCUDO_DIR . 'admin/class-wizard.php';
 }
 
 /* ── Attivazione / Disattivazione ────────────────────────────────── */
@@ -79,6 +80,7 @@ function scudo_init(): void {
 
     if ( is_admin() ) {
         Scudo_Admin::init();
+        Scudo_Wizard::init();
     }
 }
 

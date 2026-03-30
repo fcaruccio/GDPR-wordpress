@@ -31,7 +31,7 @@
         d.setTime(d.getTime() + days * 86400000);
         document.cookie = name + '=' + encodeURIComponent(value)
             + ';expires=' + d.toUTCString()
-            + ';path=/;SameSite=Lax;Secure';
+            + ';path=/;SameSite=Lax'+(location.protocol==='https:'?';Secure':'');
     }
 
     function deleteCookie(name) {

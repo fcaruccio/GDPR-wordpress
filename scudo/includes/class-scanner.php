@@ -498,6 +498,27 @@ class Scudo_Scanner {
     }
 
     /**
+     * Scansione silenziosa (senza output JSON) — usata dal wizard.
+     */
+    public static function ajax_scan_silent(): void {
+        $url = home_url( '/' );
+        $response = wp_remote_get( $url, [
+            'timeout' => 10, 'cookies' => [], 'sslverify' => false,
+            'user-agent' => 'Scudo-Scanner/1.0',
+        ] );
+        if ( is_wp_error( $response ) ) return;
+
+        $response_cookies = wp_remote_retrieve_cookies( $response );
+        $detected = [];
+        foreach ( $response_cookies as $cookie ) {
+            $detected[] = $cookie->name;
+        }
+        $body = wp_remote_retrieve_body( $response );
+        $detected = array_unique( array_merge( $detected, self::detect_cookies_from_html( $body ) ) );
+        update_option( 'scudo_detected_cookies', $detected );
+    }
+
+    /**
      * Analizza l'HTML per inferire quali cookie verranno impostati
      * (basandosi sugli script presenti nella pagina).
      */
