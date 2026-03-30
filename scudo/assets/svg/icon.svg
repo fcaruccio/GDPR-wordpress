@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#16213e"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield shape -->
+  <path d="M128 20
+    C128 20 48 44 48 44
+    C48 44 44 48 44 48
+    L44 120
+    C44 168 72 210 128 236
+    C184 210 212 168 212 120
+    L212 48
+    C212 44 208 44 208 44
+    C208 44 128 20 128 20Z"
+    fill="url(#shieldGrad)"
+    stroke="none"/>
+  <!-- Subtle inner highlight -->
+  <path d="M128 34
+    C128 34 58 55 58 55
+    L58 118
+    C58 160 82 198 128 222
+    C174 198 198 160 198 118
+    L198 55
+    C198 55 128 34 128 34Z"
+    fill="none"
+    stroke="rgba(255,255,255,0.08)"
+    stroke-width="1.5"/>
+  <!-- Checkmark -->
+  <polyline
+    points="92,132 116,156 168,100"
+    fill="none"
+    stroke="#0f9b58"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+</svg>
