@@ -51,7 +51,8 @@ class Scudo_Rights {
     /* ── Shortcode: form esercizio diritti ────────────────────────── */
 
     public static function shortcode_form(): string {
-        $nonce = wp_create_nonce( 'scudo_rights_nonce' );
+        // Token anti-CSRF semplice per form pubblici (non dipende dalla sessione utente)
+        $token = hash_hmac( 'sha256', 'scudo_rights_' . gmdate( 'Y-m-d' ), wp_salt( 'nonce' ) );
 
         $types = [
             'access'       => __( 'Accesso ai miei dati (Art. 15)', 'scudo' ),
@@ -95,9 +96,9 @@ class Scudo_Rights {
         $html .= '</div>';
 
         // Honeypot (anti-spam)
-        $html .= '<div style="position:absolute;left:-9999px;" aria-hidden="true"><input type="text" name="scudo_hp" tabindex="-1" autocomplete="off"></div>';
+        $html .= '<div style="opacity:0;position:absolute;top:0;left:0;height:0;width:0;z-index:-1;overflow:hidden;" aria-hidden="true"><input type="text" name="scudo_hp" tabindex="-1" autocomplete="new-password"></div>';
 
-        $html .= '<input type="hidden" name="nonce" value="' . esc_attr( $nonce ) . '">';
+        $html .= '<input type="hidden" name="scudo_token" value="' . esc_attr( $token ) . '">';
 
         $html .= '<button type="submit" style="background:#1a1a2e;color:#fff;border:none;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;">';
         $html .= esc_html__( 'Invia richiesta', 'scudo' );
@@ -121,14 +122,19 @@ class Scudo_Rights {
                 var fd = new FormData(form);
                 fd.append("action","scudo_submit_rights_request");
                 fetch("' . esc_url( admin_url( 'admin-ajax.php' ) ) . '",{method:"POST",body:fd,credentials:"same-origin"})
-                    .then(function(r){return r.json()})
+                    .then(function(r){
+                        var ct = r.headers.get("content-type") || "";
+                        if(ct.indexOf("application/json") !== -1) return r.json();
+                        return r.text().then(function(t){ return {success:false,data:"' . esc_js( __( 'Sessione scaduta. Ricarica la pagina e riprova.', 'scudo' ) ) . '"}; });
+                    })
                     .then(function(data){
                         btn.disabled = false;
                         if(data.success){
                             status.innerHTML = "<p style=\"color:#0f9b58;font-weight:600;\">" + data.data.message + "</p>";
                             form.reset();
                         } else {
-                            status.innerHTML = "<p style=\"color:#e94560;\">" + (data.data || "Errore") + "</p>";
+                            var msg = typeof data.data === "string" ? data.data : (data.data && data.data.message ? data.data.message : "' . esc_js( __( 'Errore sconosciuto. Ricarica la pagina e riprova.', 'scudo' ) ) . '");
+                            status.innerHTML = "<p style=\"color:#e94560;\">" + msg + "</p>";
                         }
                     })
                     .catch(function(){
@@ -145,11 +151,18 @@ class Scudo_Rights {
     /* ── AJAX: submit richiesta ──────────────────────────────────── */
 
     public static function ajax_submit(): void {
-        check_ajax_referer( 'scudo_rights_nonce', 'nonce' );
+        // Verifica token anti-CSRF (valido per la giornata corrente, non dipende dalla sessione)
+        $token = sanitize_text_field( wp_unslash( $_POST['scudo_token'] ?? '' ) );
+        $expected_today = hash_hmac( 'sha256', 'scudo_rights_' . gmdate( 'Y-m-d' ), wp_salt( 'nonce' ) );
+        $expected_yesterday = hash_hmac( 'sha256', 'scudo_rights_' . gmdate( 'Y-m-d', time() - DAY_IN_SECONDS ), wp_salt( 'nonce' ) );
+
+        if ( ! hash_equals( $expected_today, $token ) && ! hash_equals( $expected_yesterday, $token ) ) {
+            wp_send_json_error( __( 'Token scaduto. Ricarica la pagina e riprova.', 'scudo' ), 403 );
+        }
 
         // Honeypot check
         if ( ! empty( $_POST['scudo_hp'] ) ) {
-            wp_send_json_error( 'spam', 400 );
+            wp_send_json_error( __( 'Invio non riuscito. Riprova.', 'scudo' ), 400 );
         }
 
         $type    = sanitize_text_field( wp_unslash( $_POST['request_type'] ?? '' ) );

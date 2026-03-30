@@ -38,7 +38,7 @@ class Scudo_Banner {
 
         $options = scudo_options();
 
-        wp_localize_script( 'scudo-banner', 'gdprPressConfig', [
+        wp_localize_script( 'scudo-banner', 'scudoConfig', [
             'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
             'nonce'         => wp_create_nonce( 'scudo_nonce' ),
             'cookieName'    => 'scudo_consent',

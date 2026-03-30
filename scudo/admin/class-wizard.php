@@ -42,7 +42,7 @@ class Scudo_Wizard {
             <p style="font-size:14px;">
                 <strong>Scudo</strong> — <?php esc_html_e( 'Benvenuto! Configura il tuo sito in 2 minuti con il wizard guidato.', 'scudo' ); ?>
                 <a href="<?php echo esc_url( $url ); ?>" class="button button-primary" style="margin-left:12px;"><?php esc_html_e( 'Avvia configurazione', 'scudo' ); ?></a>
-                <a href="<?php echo esc_url( admin_url( 'options-general.php?page=scudo' ) ); ?>" style="margin-left:8px;"><?php esc_html_e( 'Configura manualmente', 'scudo' ); ?></a>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=scudo' ) ); ?>" style="margin-left:8px;"><?php esc_html_e( 'Configura manualmente', 'scudo' ); ?></a>
             </p>
         </div>
         <?php
@@ -174,6 +174,15 @@ class Scudo_Wizard {
             }
         }
 
+        // site_functionality è sempre attivo
+        $detected['purposes']['site_functionality'] = true;
+
+        // Salva subito i risultati del detect nei privacy_data
+        $data = get_option( 'scudo_privacy_data', [] );
+        $data['purposes'] = array_merge( $data['purposes'] ?? [], $detected['purposes'] );
+        $data['services'] = array_merge( $data['services'] ?? [], $detected['services'] );
+        update_option( 'scudo_privacy_data', $data );
+
         // Salva scansione cookie per il plugin
         if ( class_exists( 'Scudo_Scanner' ) ) {
             Scudo_Scanner::ajax_scan_silent();
@@ -193,6 +202,12 @@ class Scudo_Wizard {
         $privacy_data = wp_parse_args( get_option( 'scudo_privacy_data', [] ), Scudo_Privacy_Policy::defaults() );
         $options      = scudo_options();
         $created      = [];
+
+        // Assicura che site_functionality sia sempre attivo
+        if ( ! isset( $privacy_data['purposes'] ) || ! is_array( $privacy_data['purposes'] ) ) {
+            $privacy_data['purposes'] = [];
+        }
+        $privacy_data['purposes']['site_functionality'] = true;
 
         // 1. Crea pagina Cookie Policy
         $cookie_page_id = wp_insert_post( [
@@ -283,8 +298,8 @@ class Scudo_Wizard {
         ?>
         <style>
             .scudo-wiz { max-width:680px; margin:40px auto; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-            .scudo-wiz h1 { font-size:28px; font-weight:700; margin-bottom:4px; }
-            .scudo-wiz .subtitle { color:#646970; font-size:14px; margin-bottom:32px; }
+            .scudo-wiz h1 { font-size:28px; font-weight:700; margin:0 0 12px 0 !important; padding:0 !important; line-height:1.2; }
+            .scudo-wiz .subtitle { color:#1d2327 !important; font-size:15px !important; margin:0 0 32px 0 !important; padding:0 !important; line-height:1.4; }
             .scudo-wiz-steps { display:flex; gap:4px; margin-bottom:32px; }
             .scudo-wiz-steps span { flex:1; height:4px; border-radius:2px; background:#dcdcde; transition:background .3s; }
             .scudo-wiz-steps span.active { background:#2271b1; }
@@ -298,7 +313,8 @@ class Scudo_Wizard {
             .scudo-wiz-field label { display:block; font-weight:600; font-size:13px; margin-bottom:5px; color:#1d2327; }
             .scudo-wiz-field input[type="text"],
             .scudo-wiz-field input[type="email"],
-            .scudo-wiz-field input[type="tel"] { width:100%; padding:8px 12px; border:1px solid #8c8f94; border-radius:4px; font-size:14px; }
+            .scudo-wiz-field input[type="tel"] { width:100%; padding:8px 12px; border:1px solid #8c8f94; border-radius:4px; font-size:14px; transition:border-color .2s, box-shadow .2s; }
+            @keyframes scudoShake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
             .scudo-wiz-field input:focus { border-color:#2271b1; box-shadow:0 0 0 1px #2271b1; outline:none; }
             .scudo-wiz-check { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #dcdcde; border-radius:6px; margin-bottom:8px; cursor:pointer; transition:border-color .15s, background .15s; }
             .scudo-wiz-check:hover { border-color:#2271b1; background:#f0f6fc; }
@@ -317,7 +333,13 @@ class Scudo_Wizard {
             .scudo-wiz-nav .btn:hover { opacity:0.9; }
             .scudo-wiz-nav .btn-back { background:#f0f0f1; color:#1d2327; }
             .scudo-wiz-nav .btn-next { background:#2271b1; color:#fff; }
-            .scudo-wiz-nav .btn-finish { background:#0f9b58; color:#fff; font-size:15px; padding:12px 32px; }
+            .scudo-wiz-nav .btn-finish, .scudo-wiz-result .btn-finish {
+                background:linear-gradient(135deg,#0f9b58 0%,#0a7f47 100%); color:#fff; font-size:17px; padding:16px 48px;
+                border-radius:10px; border:none; cursor:pointer; font-weight:700; letter-spacing:0.3px;
+                box-shadow:0 4px 14px rgba(15,155,88,0.4); transition:transform .15s,box-shadow .15s;
+            }
+            .scudo-wiz-result .btn-finish:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(15,155,88,0.5); }
+            .scudo-wiz-result .btn-finish:active { transform:translateY(0); }
             .scudo-wiz-saved { font-size:12px; color:#0f9b58; opacity:0; transition:opacity .3s; }
             .scudo-wiz-saved.show { opacity:1; }
             .scudo-wiz-themes { display:flex; gap:12px; flex-wrap:wrap; }
@@ -357,7 +379,7 @@ class Scudo_Wizard {
                         <input type="text" data-key="controller_name" value="<?php echo esc_attr( $privacy_data['controller_name'] ); ?>" placeholder="<?php esc_attr_e( 'Es: Mario Rossi S.r.l.', 'scudo' ); ?>">
                     </div>
                     <div class="scudo-wiz-field">
-                        <label><?php esc_html_e( 'Indirizzo sede legale', 'scudo' ); ?></label>
+                        <label><?php esc_html_e( 'Indirizzo sede legale *', 'scudo' ); ?></label>
                         <input type="text" data-key="controller_address" value="<?php echo esc_attr( $privacy_data['controller_address'] ); ?>" placeholder="<?php esc_attr_e( 'Es: Via Roma 1, 20100 Milano (MI)', 'scudo' ); ?>">
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -510,7 +532,7 @@ class Scudo_Wizard {
                         <div style="font-size:48px;margin-bottom:12px;">&#x1f6e1;&#xfe0f;</div>
                         <h2 id="wiz-done-msg"></h2>
                         <div class="pages" id="wiz-done-pages"></div>
-                        <a href="<?php echo esc_url( admin_url( 'options-general.php?page=scudo' ) ); ?>" class="btn btn-next" style="display:inline-block;margin-top:16px;text-decoration:none;"><?php esc_html_e( 'Vai alle impostazioni', 'scudo' ); ?></a>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=scudo' ) ); ?>" class="btn btn-next" style="display:inline-block;margin-top:16px;text-decoration:none;"><?php esc_html_e( 'Vai alle impostazioni', 'scudo' ); ?></a>
                         <a href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" class="btn btn-back" style="display:inline-block;margin-top:16px;text-decoration:none;margin-left:8px;"><?php esc_html_e( 'Vedi il sito', 'scudo' ); ?></a>
                     </div>
                 </div>
@@ -543,12 +565,64 @@ class Scudo_Wizard {
                 btnNext.style.display = n >= totalSteps ? 'none' : '';
             }
 
-            btnNext.addEventListener('click', function(){ if(step < totalSteps) showStep(step+1); if(step === 2) autoDetect(); });
+            function validateStep(n) {
+                var currentStep = steps[n-1];
+                var required = {
+                    1: ['controller_name', 'controller_address', 'controller_email'],
+                };
+                var fields = required[n] || [];
+                var firstInvalid = null;
+
+                fields.forEach(function(key) {
+                    var input = currentStep.querySelector('[data-key="' + key + '"]');
+                    if (!input) return;
+                    var val = input.value.trim();
+                    if (!val) {
+                        input.style.borderColor = '#e94560';
+                        input.style.boxShadow = '0 0 0 1px #e94560';
+                        if (!firstInvalid) firstInvalid = input;
+                    } else {
+                        input.style.borderColor = '';
+                        input.style.boxShadow = '';
+                    }
+                });
+
+                // Validazione email
+                if (n === 1) {
+                    var emailInput = currentStep.querySelector('[data-key="controller_email"]');
+                    if (emailInput && emailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+                        emailInput.style.borderColor = '#e94560';
+                        emailInput.style.boxShadow = '0 0 0 1px #e94560';
+                        if (!firstInvalid) firstInvalid = emailInput;
+                    }
+                }
+
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    // Shake animation
+                    firstInvalid.style.animation = 'none';
+                    firstInvalid.offsetHeight;
+                    firstInvalid.style.animation = 'scudoShake 0.4s ease';
+                    return false;
+                }
+                return true;
+            }
+
+            btnNext.addEventListener('click', function(){
+                if (!validateStep(step)) return;
+                if (step < totalSteps) showStep(step+1);
+                if (step === 2) autoDetect();
+            });
             btnBack.addEventListener('click', function(){ if(step > 1) showStep(step-1); });
 
             // Auto-save: text inputs con debounce
             document.querySelectorAll('.scudo-wiz-field input').forEach(function(input){
                 input.addEventListener('input', function(){
+                    // Reset errore di validazione
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                    this.style.animation = '';
+
                     var key = this.getAttribute('data-key');
                     if(!key) return;
                     var val = this.value;

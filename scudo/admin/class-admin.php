@@ -19,18 +19,49 @@ class Scudo_Admin {
 
     /* ── Menu ────────────────────────────────────────────────────── */
 
+    private const PARENT_SLUG = 'velocia';
+
     public static function add_menu(): void {
-        add_options_page(
-            __( 'Scudo', 'scudo' ),
-            __( 'Scudo', 'scudo' ),
+        // Menu top-level "Velocia" (crealo solo se non esiste già)
+        global $menu;
+        $exists = false;
+        if ( is_array( $menu ) ) {
+            foreach ( $menu as $item ) {
+                if ( isset( $item[2] ) && $item[2] === self::PARENT_SLUG ) {
+                    $exists = true;
+                    break;
+                }
+            }
+        }
+
+        if ( ! $exists ) {
+            add_menu_page(
+                'Velocia',
+                'Velocia',
+                'manage_options',
+                self::PARENT_SLUG,
+                [ __CLASS__, 'render_page' ],
+                'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#a7aaad"><path d="M10 2l-7 3v5c0 4.4 3 8.5 7 9.6 4-1.1 7-5.2 7-9.6V5l-7-3zm0 2.2l5 2.1v3.7c0 3.5-2.2 6.7-5 7.8-2.8-1.1-5-4.3-5-7.8V6.3l5-2.1zm-1.3 8.2l-2.4-2.4 1.1-1.1 1.3 1.3 3.5-3.5 1.1 1.1-4.6 4.6z"/></svg>' ),
+                30
+            );
+        }
+
+        // Sottomenu "Scudo"
+        add_submenu_page(
+            self::PARENT_SLUG,
+            __( 'Scudo — GDPR', 'scudo' ),
+            __( 'Scudo — GDPR', 'scudo' ),
             'manage_options',
             self::PAGE_SLUG,
             [ __CLASS__, 'render_page' ]
         );
+
+        // Rimuovi il sottomenu duplicato "Velocia" che WordPress crea automaticamente
+        remove_submenu_page( self::PARENT_SLUG, self::PARENT_SLUG );
     }
 
     public static function action_links( array $links ): array {
-        $url = admin_url( 'options-general.php?page=' . self::PAGE_SLUG );
+        $url = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
         array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . __( 'Impostazioni', 'scudo' ) . '</a>' );
         return $links;
     }
@@ -143,7 +174,7 @@ class Scudo_Admin {
             ?>
             <nav class="nav-tab-wrapper" style="margin-bottom:20px;">
                 <?php foreach ( $tabs as $slug => $label ) : ?>
-                    <a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=' . $slug ) ); ?>"
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=' . $slug ) ); ?>"
                        class="nav-tab <?php echo $tab === $slug ? 'nav-tab-active' : ''; ?>">
                         <?php echo esc_html( $label ); ?>
                     </a>
@@ -169,7 +200,7 @@ class Scudo_Admin {
             </div>
 
             <p>
-                <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&scudo_export=csv' ), 'scudo_export_csv' ) ); ?>" class="button button-secondary">
+                <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&scudo_export=csv' ), 'scudo_export_csv' ) ); ?>" class="button button-secondary">
                     <?php esc_html_e( 'Esporta registri consenso (CSV)', 'scudo' ); ?>
                 </a>
             </p>
@@ -187,10 +218,19 @@ class Scudo_Admin {
                     <th><?php esc_html_e( 'Stato', 'scudo' ); ?></th>
                 </tr></thead>
                 <tbody>
-                    <?php foreach ( $requests as $req ) : ?>
+                    <?php
+                    $type_labels = [
+                        'access'        => __( 'Accesso ai dati', 'scudo' ),
+                        'rectification' => __( 'Rettifica', 'scudo' ),
+                        'erasure'       => __( 'Cancellazione', 'scudo' ),
+                        'restriction'   => __( 'Limitazione', 'scudo' ),
+                        'portability'   => __( 'Portabilità', 'scudo' ),
+                        'objection'     => __( 'Opposizione', 'scudo' ),
+                    ];
+                    foreach ( $requests as $req ) : ?>
                     <tr>
                         <td><?php echo esc_html( wp_date( 'd/m/Y H:i', strtotime( $req['created_at'] ) ) ); ?></td>
-                        <td><?php echo esc_html( ucfirst( $req['request_type'] ) ); ?></td>
+                        <td><?php echo esc_html( $type_labels[ $req['request_type'] ] ?? $req['request_type'] ); ?></td>
                         <td><?php echo esc_html( $req['name'] ); ?></td>
                         <td><?php echo esc_html( $req['email'] ); ?></td>
                         <td><?php echo $req['status'] === 'pending' ? '<span style="color:#f59e0b;font-weight:600;">' . esc_html__( 'In attesa', 'scudo' ) . '</span>' : '<span style="color:#0f9b58;font-weight:600;">' . esc_html__( 'Completata', 'scudo' ) . '</span>'; ?></td>
@@ -232,7 +272,7 @@ class Scudo_Admin {
 
             <form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
                 <?php settings_fields( self::OPTION_GROUP ); ?>
-                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=banner' ) ); ?>">
+                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=banner' ) ); ?>">
                 <?php // Preserva valori delle altre tab ?>
                 <input type="hidden" name="scudo_options[cat_analytics_label]" value="<?php echo esc_attr( $options['cat_analytics_label'] ); ?>">
                 <input type="hidden" name="scudo_options[cat_analytics_desc]" value="<?php echo esc_attr( $options['cat_analytics_desc'] ); ?>">
@@ -428,7 +468,7 @@ class Scudo_Admin {
             <!-- ═══ TAB: CONSENSO E BLOCCO ═══ -->
             <form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
                 <?php settings_fields( self::OPTION_GROUP ); ?>
-                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=consent' ) ); ?>">
+                <input type="hidden" name="_wp_http_referer" value="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=consent' ) ); ?>">
                 <?php // Hidden fields per preservare i valori delle altre tab ?>
                 <input type="hidden" name="scudo_options[banner_position]" value="<?php echo esc_attr( $options['banner_position'] ); ?>">
                 <input type="hidden" name="scudo_options[banner_title]" value="<?php echo esc_attr( $options['banner_title'] ); ?>">
