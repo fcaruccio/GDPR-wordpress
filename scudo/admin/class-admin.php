@@ -108,7 +108,7 @@ class Scudo_Admin {
 
         $options = scudo_options();
         $stats   = Scudo_Consent::get_stats( 30 );
-        $tab     = sanitize_text_field( $_GET['tab'] ?? 'dashboard' );
+        $tab     = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
         ?>
         <div class="wrap">
             <style>
@@ -356,14 +356,14 @@ class Scudo_Admin {
                                 <input type="radio" name="scudo_options[color_theme]" value="<?php echo esc_attr( $theme_key ); ?>" <?php checked( $is_active ); ?> style="display:none;" class="scudo-theme-radio">
                                 <div style="width:220px;border:3px solid <?php echo $is_active ? '#2271b1' : '#c3c4c7'; ?>;border-radius:8px;overflow:hidden;transition:border-color .2s;">
                                     <!-- Mini preview -->
-                                    <div style="background:<?php echo $theme_data['bg']; ?>;padding:14px 16px;min-height:80px;display:flex;flex-direction:column;justify-content:space-between;">
+                                    <div style="background:<?php echo esc_attr( $theme_data['bg'] ); ?>;padding:14px 16px;min-height:80px;display:flex;flex-direction:column;justify-content:space-between;">
                                         <div>
-                                            <div style="color:<?php echo $theme_data['text']; ?>;font-size:11px;font-weight:700;margin-bottom:2px;"><?php esc_html_e( 'Questo sito utilizza i cookie', 'scudo' ); ?></div>
-                                            <div style="color:<?php echo $theme_data['text']; ?>;font-size:9px;opacity:0.7;"><?php esc_html_e( 'Utilizziamo cookie tecnici e...', 'scudo' ); ?></div>
+                                            <div style="color:<?php echo esc_attr( $theme_data['text'] ); ?>;font-size:11px;font-weight:700;margin-bottom:2px;"><?php esc_html_e( 'Questo sito utilizza i cookie', 'scudo' ); ?></div>
+                                            <div style="color:<?php echo esc_attr( $theme_data['text'] ); ?>;font-size:9px;opacity:0.7;"><?php esc_html_e( 'Utilizziamo cookie tecnici e...', 'scudo' ); ?></div>
                                         </div>
                                         <div style="display:flex;gap:6px;margin-top:10px;">
-                                            <span style="background:<?php echo $theme_data['btn']; ?>;color:<?php echo $theme_data['btn_text']; ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Accetta', 'scudo' ); ?></span>
-                                            <span style="background:<?php echo $theme_data['btn']; ?>;color:<?php echo $theme_data['btn_text']; ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Rifiuta', 'scudo' ); ?></span>
+                                            <span style="background:<?php echo esc_attr( $theme_data['btn'] ); ?>;color:<?php echo esc_attr( $theme_data['btn_text'] ); ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Accetta', 'scudo' ); ?></span>
+                                            <span style="background:<?php echo esc_attr( $theme_data['btn'] ); ?>;color:<?php echo esc_attr( $theme_data['btn_text'] ); ?>;font-size:9px;font-weight:600;padding:4px 10px;border-radius:4px;"><?php esc_html_e( 'Rifiuta', 'scudo' ); ?></span>
                                         </div>
                                     </div>
                                     <div style="padding:8px 12px;background:#f9fafb;text-align:center;font-size:12px;font-weight:600;color:<?php echo $is_active ? '#2271b1' : '#50575e'; ?>;">
@@ -388,8 +388,8 @@ class Scudo_Admin {
                                 ];
                                 foreach ( $colors as $key => $label ) : ?>
                                 <div style="display:flex;align-items:center;gap:10px;">
-                                    <input type="color" name="scudo_options[<?php echo $key; ?>]" id="<?php echo $key; ?>" value="<?php echo esc_attr( $options[ $key ] ); ?>" style="width:40px;height:34px;border:1px solid #c3c4c7;border-radius:4px;padding:2px;cursor:pointer;">
-                                    <label for="<?php echo $key; ?>" style="font-size:13px;"><?php echo esc_html( $label ); ?></label>
+                                    <input type="color" name="scudo_options[<?php echo esc_attr( $key ); ?>]" id="<?php echo esc_attr( $key ); ?>" value="<?php echo esc_attr( $options[ $key ] ); ?>" style="width:40px;height:34px;border:1px solid #c3c4c7;border-radius:4px;padding:2px;cursor:pointer;">
+                                    <label for="<?php echo esc_attr( $key ); ?>" style="font-size:13px;"><?php echo esc_html( $label ); ?></label>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -451,17 +451,20 @@ class Scudo_Admin {
                 ];
                 foreach ( $cats as $slug => $cat_info ) : ?>
                 <div class="postbox" style="max-width:900px;">
-                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php printf( esc_html__( 'Categoria: %s', 'scudo' ), esc_html( $cat_info[0] ) ); ?></h2></div>
+                    <div class="postbox-header"><h2 style="padding:8px 12px;"><?php
+                    // translators: %s is the cookie category name (e.g. Analytics, Marketing, Preferences).
+                    printf( esc_html__( 'Categoria: %s', 'scudo' ), esc_html( $cat_info[0] ) );
+                ?></h2></div>
                     <div class="inside">
                         <p class="description"><?php echo esc_html( $cat_info[1] ); ?></p>
                         <table class="form-table" style="margin-top:0;">
                             <tr>
-                                <th scope="row"><label for="cat_<?php echo $slug; ?>_label"><?php esc_html_e( 'Nome visibile', 'scudo' ); ?></label></th>
-                                <td><input type="text" name="scudo_options[cat_<?php echo $slug; ?>_label]" id="cat_<?php echo $slug; ?>_label" value="<?php echo esc_attr( $options[ 'cat_' . $slug . '_label' ] ); ?>" class="regular-text"></td>
+                                <th scope="row"><label for="cat_<?php echo esc_attr( $slug ); ?>_label"><?php esc_html_e( 'Nome visibile', 'scudo' ); ?></label></th>
+                                <td><input type="text" name="scudo_options[cat_<?php echo esc_attr( $slug ); ?>_label]" id="cat_<?php echo esc_attr( $slug ); ?>_label" value="<?php echo esc_attr( $options[ 'cat_' . $slug . '_label' ] ); ?>" class="regular-text"></td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="cat_<?php echo $slug; ?>_desc"><?php esc_html_e( 'Descrizione', 'scudo' ); ?></label></th>
-                                <td><textarea name="scudo_options[cat_<?php echo $slug; ?>_desc]" id="cat_<?php echo $slug; ?>_desc" rows="2" class="large-text"><?php echo esc_textarea( $options[ 'cat_' . $slug . '_desc' ] ); ?></textarea></td>
+                                <th scope="row"><label for="cat_<?php echo esc_attr( $slug ); ?>_desc"><?php esc_html_e( 'Descrizione', 'scudo' ); ?></label></th>
+                                <td><textarea name="scudo_options[cat_<?php echo esc_attr( $slug ); ?>_desc]" id="cat_<?php echo esc_attr( $slug ); ?>_desc" rows="2" class="large-text"><?php echo esc_textarea( $options[ 'cat_' . $slug . '_desc' ] ); ?></textarea></td>
                             </tr>
                         </table>
                     </div>

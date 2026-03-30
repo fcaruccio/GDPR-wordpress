@@ -38,6 +38,7 @@ class Scudo_Forms {
         }
 
         if ( $policy_url ) {
+            // translators: %s is the URL to the privacy policy page.
             return sprintf(
                 __( 'Ho letto l\'<a href="%s" target="_blank" rel="noopener">informativa sulla privacy</a> e acconsento al trattamento dei miei dati personali per la gestione della presente richiesta. *', 'scudo' ),
                 esc_url( $policy_url )
@@ -64,7 +65,7 @@ class Scudo_Forms {
         $checkbox_html = '<div class="scudo-form-consent" style="margin:16px 0;">';
         $checkbox_html .= '<p><label style="display:flex;align-items:flex-start;gap:8px;font-size:0.9em;line-height:1.5;">';
         $checkbox_html .= '<input type="checkbox" name="scudo_privacy" value="1" class="scudo-consent-cb" required style="margin-top:4px;flex-shrink:0;">';
-        $checkbox_html .= '<span>' . self::get_privacy_text() . '</span>';
+        $checkbox_html .= '<span>' . wp_kses( self::get_privacy_text(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ) . '</span>';
         $checkbox_html .= '</label></p>';
         $checkbox_html .= '</div>';
 
@@ -84,6 +85,7 @@ class Scudo_Forms {
     }
 
     public static function cf7_validate( $result, $tags ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- CF7 handles its own nonce verification.
         if ( empty( $_POST['scudo_privacy'] ) ) {
             // CF7 non supporta la validazione di campi custom facilmente,
             // ma il `required` HTML lato client copre il caso principale.
@@ -100,7 +102,7 @@ class Scudo_Forms {
         echo '<div class="scudo-form-consent" style="margin:16px 0;">';
         echo '<p><label style="display:flex;align-items:flex-start;gap:8px;font-size:0.9em;line-height:1.5;">';
         echo '<input type="checkbox" name="scudo_privacy" value="1" required style="margin-top:4px;flex-shrink:0;">';
-        echo '<span>' . self::get_privacy_text() . '</span>';
+        echo '<span>' . wp_kses( self::get_privacy_text(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ) . '</span>';
         echo '</label></p>';
         echo '</div>';
     }
@@ -117,7 +119,7 @@ class Scudo_Forms {
         $checkbox_html = '<div class="scudo-form-consent" style="margin:16px 0;">';
         $checkbox_html .= '<p><label style="display:flex;align-items:flex-start;gap:8px;font-size:0.9em;line-height:1.5;">';
         $checkbox_html .= '<input type="checkbox" name="scudo_privacy" value="1" required style="margin-top:4px;flex-shrink:0;">';
-        $checkbox_html .= '<span>' . self::get_privacy_text() . '</span>';
+        $checkbox_html .= '<span>' . wp_kses( self::get_privacy_text(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ) . '</span>';
         $checkbox_html .= '</label></p>';
         $checkbox_html .= '</div>';
 
@@ -125,6 +127,7 @@ class Scudo_Forms {
     }
 
     public static function gforms_validate( array $validation_result ): array {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Gravity Forms handles its own nonce verification.
         if ( empty( $_POST['scudo_privacy'] ) ) {
             $validation_result['is_valid'] = false;
             // Aggiungi errore al primo campo
@@ -144,7 +147,7 @@ class Scudo_Forms {
         $fields['gdpr_consent'] = '<p class="comment-form-gdpr-consent" style="margin:8px 0;">'
             . '<label style="display:flex;align-items:flex-start;gap:8px;font-size:0.9em;line-height:1.5;">'
             . '<input type="checkbox" name="scudo_privacy" value="1" required style="margin-top:4px;flex-shrink:0;">'
-            . '<span>' . self::get_privacy_text() . '</span>'
+            . '<span>' . wp_kses( self::get_privacy_text(), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ) . '</span>'
             . '</label></p>';
 
         return $fields;
@@ -156,10 +159,11 @@ class Scudo_Forms {
             return $commentdata;
         }
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- WordPress comment form handles its own nonce verification.
         if ( empty( $_POST['scudo_privacy'] ) ) {
             wp_die(
-                '<p>' . __( 'Devi accettare l\'informativa sulla privacy per pubblicare un commento.', 'scudo' ) . '</p>',
-                __( 'Consenso richiesto', 'scudo' ),
+                '<p>' . wp_kses( __( 'Devi accettare l\'informativa sulla privacy per pubblicare un commento.', 'scudo' ), [ 'a' => [ 'href' => [], 'target' => [], 'rel' => [] ] ] ) . '</p>',
+                esc_html__( 'Consenso richiesto', 'scudo' ),
                 [ 'back_link' => true, 'response' => 403 ]
             );
         }

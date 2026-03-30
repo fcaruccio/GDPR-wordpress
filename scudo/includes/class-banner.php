@@ -81,7 +81,7 @@ class Scudo_Banner {
         ?>
 
 <!-- Scudo Cookie Banner -->
-<div id="scudo-banner" class="scudo-banner scudo-banner--<?php echo $position; ?>" role="dialog" aria-modal="false" aria-label="<?php esc_attr_e( 'Gestione cookie', 'scudo' ); ?>" hidden>
+<div id="scudo-banner" class="scudo-banner scudo-banner--<?php echo esc_attr( $position ); ?>" role="dialog" aria-modal="false" aria-label="<?php esc_attr_e( 'Gestione cookie', 'scudo' ); ?>" hidden>
     <div class="scudo-banner__inner">
         <div class="scudo-banner__content">
             <p class="scudo-banner__title"><?php echo esc_html( $options['banner_title'] ); ?></p>

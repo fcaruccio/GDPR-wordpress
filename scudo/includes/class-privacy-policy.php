@@ -299,7 +299,7 @@ class Scudo_Privacy_Policy {
             wp_send_json_error( 'unauthorized', 403 );
         }
 
-        $raw = json_decode( wp_unslash( $_POST['data'] ?? '{}' ), true );
+        $raw = json_decode( sanitize_text_field( wp_unslash( $_POST['data'] ?? '{}' ) ), true );
         if ( ! is_array( $raw ) ) {
             wp_send_json_error( __( 'Dati non validi.', 'scudo' ) );
         }
@@ -371,6 +371,7 @@ class Scudo_Privacy_Policy {
         $c = '';
 
         // Intro
+        // translators: %s is the website URL wrapped in a <strong> tag.
         $c .= '<p>' . sprintf(
             __( 'La presente informativa sulla privacy descrive le modalità di raccolta e trattamento dei dati personali degli utenti che visitano il sito web %s (di seguito "il Sito"), ai sensi del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 (Codice Privacy).', 'scudo' ),
             '<strong>' . esc_html( $url ) . '</strong>'
@@ -494,6 +495,7 @@ class Scudo_Privacy_Policy {
         $c .= '<li>' . __( '<strong>Opposizione</strong> (Art. 21): opporti in qualsiasi momento al trattamento dei tuoi dati basato sul legittimo interesse.', 'scudo' ) . '</li>';
         $c .= '<li>' . __( '<strong>Revoca del consenso</strong> (Art. 7.3): revocare in qualsiasi momento il consenso prestato, senza che ciò pregiudichi la liceità del trattamento precedente.', 'scudo' ) . '</li>';
         $c .= '</ul>';
+        // translators: %s is the data controller's email address.
         $c .= '<p>' . sprintf( __( 'Per esercitare i tuoi diritti, puoi contattarci all\'indirizzo email: <strong>%s</strong>', 'scudo' ), esc_html( $d['controller_email'] ) ) . '</p>';
 
         // 9. Reclamo
@@ -507,6 +509,7 @@ class Scudo_Privacy_Policy {
         // 10. Aggiornamenti
         $c .= '<h2>' . __( '10. Aggiornamenti della presente informativa', 'scudo' ) . '</h2>';
         $c .= '<p>' . __( 'La presente informativa può essere soggetta ad aggiornamenti. Ti invitiamo a consultare periodicamente questa pagina per verificare eventuali modifiche.', 'scudo' ) . '</p>';
+        // translators: %s is the date of the last update.
         $c .= '<p><em>' . sprintf( __( 'Ultimo aggiornamento: %s', 'scudo' ), $date ) . '</em></p>';
 
         return $c;

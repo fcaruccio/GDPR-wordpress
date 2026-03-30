@@ -87,7 +87,8 @@ class Scudo_Fonts {
 
         wp_send_json_success( [
             'message'    => sprintf(
-                __( 'Scaricati %d font da %d fogli di stile Google Fonts. I font vengono ora serviti dal tuo server.', 'scudo' ),
+                // translators: %1$d is the number of fonts downloaded, %2$d is the number of CSS stylesheets processed.
+                __( 'Scaricati %1$d font da %2$d fogli di stile Google Fonts. I font vengono ora serviti dal tuo server.', 'scudo' ),
                 $font_count,
                 count( $map )
             ),
@@ -208,7 +209,13 @@ class Scudo_Fonts {
             wp_mkdir_p( $dir );
         }
 
-        if ( ! is_writable( $dir ) ) {
+        global $wp_filesystem;
+        if ( empty( $wp_filesystem ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            WP_Filesystem();
+        }
+
+        if ( ! $wp_filesystem->is_writable( $dir ) ) {
             return null;
         }
 
@@ -230,7 +237,12 @@ class Scudo_Fonts {
                     }
                 }
             }
-            rmdir( $dir );
+            global $wp_filesystem;
+            if ( empty( $wp_filesystem ) ) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                WP_Filesystem();
+            }
+            $wp_filesystem->rmdir( $dir );
         }
 
         delete_option( self::OPTION_MAP );

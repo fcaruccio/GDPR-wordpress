@@ -61,7 +61,7 @@ class Scudo_Consent {
         check_ajax_referer( 'scudo_nonce', 'nonce' );
 
         $action_type = sanitize_text_field( wp_unslash( $_POST['consent_action'] ?? '' ) );
-        $choices_raw = wp_unslash( $_POST['choices'] ?? '{}' );
+        $choices_raw = sanitize_text_field( wp_unslash( $_POST['choices'] ?? '{}' ) );
         $choices     = json_decode( $choices_raw, true );
 
         if ( ! is_array( $choices ) || ! in_array( $action_type, [ 'accept_all', 'reject_all', 'custom', 'revoke' ], true ) ) {
@@ -109,6 +109,7 @@ class Scudo_Consent {
         $ip_raw = self::get_client_ip();
         $ip_hash = hash( 'sha256', $ip_raw . wp_salt( 'auth' ) ); // hash + salt per privacy
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->insert(
             $wpdb->prefix . self::TABLE,
             [
@@ -128,7 +129,7 @@ class Scudo_Consent {
 
     private static function get_or_create_consent_id(): string {
         if ( ! empty( $_COOKIE['scudo_cid'] ) ) {
-            return sanitize_text_field( $_COOKIE['scudo_cid'] );
+            return sanitize_text_field( wp_unslash( $_COOKIE['scudo_cid'] ) );
         }
         return wp_generate_uuid4();
     }
@@ -158,7 +159,7 @@ class Scudo_Consent {
         if ( empty( $_COOKIE[ self::COOKIE ] ) ) {
             return null;
         }
-        $data = json_decode( wp_unslash( $_COOKIE[ self::COOKIE ] ), true );
+        $data = json_decode( sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE ] ) ), true );
         if ( ! is_array( $data ) || empty( $data['choices'] ) ) {
             return null;
         }
@@ -196,8 +197,10 @@ class Scudo_Consent {
         $table = $wpdb->prefix . self::TABLE;
         $since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $results = $wpdb->get_results(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 "SELECT action, COUNT(*) as total FROM {$table} WHERE created_at >= %s GROUP BY action",
                 $since
             ),
@@ -225,8 +228,9 @@ class Scudo_Consent {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $rows = $wpdb->get_results(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             "SELECT id, consent_id, ip_hash, user_agent, choices, policy_version, action, created_at FROM {$table} ORDER BY created_at DESC",
             ARRAY_A
         );
@@ -238,10 +242,10 @@ class Scudo_Consent {
         header( 'Pragma: no-cache' );
         header( 'Expires: 0' );
 
-        $output = fopen( 'php://output', 'w' );
+        $output = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 
         // BOM per Excel
-        fwrite( $output, "\xEF\xBB\xBF" );
+        fwrite( $output, "\xEF\xBB\xBF" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 
         // Header
         fputcsv( $output, [ 'ID', 'Consent ID', 'IP Hash', 'User Agent', 'Scelte', 'Versione Policy', 'Azione', 'Data/Ora (UTC)' ] );
@@ -259,7 +263,7 @@ class Scudo_Consent {
             ] );
         }
 
-        fclose( $output );
+        fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         exit;
     }
 }

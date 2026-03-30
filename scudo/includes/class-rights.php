@@ -165,6 +165,7 @@ class Scudo_Rights {
 
         // Salva nel DB
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->insert(
             $wpdb->prefix . self::TABLE,
             [
@@ -212,6 +213,7 @@ class Scudo_Rights {
 
         $subject = sprintf( '[%s] %s — %s', $site_name, __( 'Richiesta GDPR', 'scudo' ), $type_label );
 
+        // translators: %s is the website name.
         $body  = sprintf( __( 'Nuova richiesta di esercizio diritti GDPR su %s', 'scudo' ), $site_name ) . "\n\n";
         $body .= __( 'Tipo:', 'scudo' ) . ' ' . $type_label . "\n";
         $body .= __( 'Nome:', 'scudo' ) . ' ' . $name . "\n";
@@ -263,6 +265,7 @@ class Scudo_Rights {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $deleted = $wpdb->delete( $table, [ 'email' => $email ], [ '%s' ] );
 
         return [
@@ -279,8 +282,10 @@ class Scudo_Rights {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         return $wpdb->get_results(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d",
                 $limit
             ),

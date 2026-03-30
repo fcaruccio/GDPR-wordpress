@@ -18,20 +18,27 @@ delete_option( 'scudo_privacy_data' );
 
 // Rimuovi tabelle
 global $wpdb;
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}scudo_consent_log" );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}scudo_rights_requests" );
 
 // Rimuovi font scaricati
-$upload_dir = wp_upload_dir();
-$fonts_dir  = $upload_dir['basedir'] . '/scudo-fonts';
-if ( is_dir( $fonts_dir ) ) {
-    $files = glob( $fonts_dir . '/*' );
-    if ( $files ) {
-        foreach ( $files as $file ) {
-            if ( is_file( $file ) ) {
-                wp_delete_file( $file );
+$scudo_upload_dir = wp_upload_dir();
+$scudo_fonts_dir  = $scudo_upload_dir['basedir'] . '/scudo-fonts';
+if ( is_dir( $scudo_fonts_dir ) ) {
+    $scudo_files = glob( $scudo_fonts_dir . '/*' );
+    if ( $scudo_files ) {
+        foreach ( $scudo_files as $scudo_file ) {
+            if ( is_file( $scudo_file ) ) {
+                wp_delete_file( $scudo_file );
             }
         }
     }
-    rmdir( $fonts_dir );
+    global $wp_filesystem;
+    if ( empty( $wp_filesystem ) ) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        WP_Filesystem();
+    }
+    $wp_filesystem->rmdir( $scudo_fonts_dir );
 }

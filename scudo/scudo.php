@@ -12,7 +12,6 @@
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
- * Update URI:  https://github.com/fcaruccio/GDPR-wordpress
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -56,8 +55,6 @@ function scudo_activate(): void {
 add_action( 'plugins_loaded', 'scudo_init' );
 
 function scudo_init(): void {
-    load_plugin_textdomain( 'scudo', false, dirname( SCUDO_BASENAME ) . '/languages' );
-
     // Inizializza solo nel frontend (non in admin, AJAX, REST, WP-CLI)
     if ( ! is_admin() && ! wp_doing_ajax() && ! wp_doing_cron() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
         Scudo_GCM::init();
@@ -74,7 +71,7 @@ function scudo_init(): void {
     Scudo_Rights::init();
 
     // Export CSV handler
-    if ( is_admin() && isset( $_GET['scudo_export'] ) && $_GET['scudo_export'] === 'csv' ) {
+    if ( is_admin() && isset( $_GET['scudo_export'] ) && isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'scudo_export_csv' ) && sanitize_text_field( wp_unslash( $_GET['scudo_export'] ) ) === 'csv' ) {
         add_action( 'admin_init', [ 'Scudo_Consent', 'export_csv' ] );
     }
 

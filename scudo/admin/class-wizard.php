@@ -63,7 +63,7 @@ class Scudo_Wizard {
         }
 
         $key   = sanitize_text_field( wp_unslash( $_POST['key'] ?? '' ) );
-        $value = wp_unslash( $_POST['value'] ?? '' );
+        $value = sanitize_text_field( wp_unslash( $_POST['value'] ?? '' ) );
 
         if ( empty( $key ) ) {
             wp_send_json_error( 'missing_key' );
@@ -476,11 +476,11 @@ class Scudo_Wizard {
                         foreach ( $theme_options as $tk => $tv ) : ?>
                         <label class="scudo-wiz-theme <?php echo $current_theme === $tk ? 'selected' : ''; ?>">
                             <input type="radio" name="wiz_theme" value="<?php echo esc_attr( $tk ); ?>" <?php checked( $current_theme, $tk ); ?>>
-                            <div style="background:<?php echo $tv[1]; ?>;padding:16px;min-height:90px;display:flex;flex-direction:column;justify-content:space-between;">
-                                <div style="color:<?php echo $tv[2]; ?>;font-size:11px;font-weight:700;"><?php esc_html_e( 'Questo sito utilizza i cookie', 'scudo' ); ?></div>
+                            <div style="background:<?php echo esc_attr( $tv[1] ); ?>;padding:16px;min-height:90px;display:flex;flex-direction:column;justify-content:space-between;">
+                                <div style="color:<?php echo esc_attr( $tv[2] ); ?>;font-size:11px;font-weight:700;"><?php esc_html_e( 'Questo sito utilizza i cookie', 'scudo' ); ?></div>
                                 <div style="display:flex;gap:6px;margin-top:12px;">
-                                    <span style="background:<?php echo $tv[3]; ?>;color:<?php echo $tv[4]; ?>;font-size:9px;font-weight:600;padding:5px 12px;border-radius:4px;"><?php esc_html_e( 'Accetta', 'scudo' ); ?></span>
-                                    <span style="background:<?php echo $tv[3]; ?>;color:<?php echo $tv[4]; ?>;font-size:9px;font-weight:600;padding:5px 12px;border-radius:4px;"><?php esc_html_e( 'Rifiuta', 'scudo' ); ?></span>
+                                    <span style="background:<?php echo esc_attr( $tv[3] ); ?>;color:<?php echo esc_attr( $tv[4] ); ?>;font-size:9px;font-weight:600;padding:5px 12px;border-radius:4px;"><?php esc_html_e( 'Accetta', 'scudo' ); ?></span>
+                                    <span style="background:<?php echo esc_attr( $tv[3] ); ?>;color:<?php echo esc_attr( $tv[4] ); ?>;font-size:9px;font-weight:600;padding:5px 12px;border-radius:4px;"><?php esc_html_e( 'Rifiuta', 'scudo' ); ?></span>
                                 </div>
                             </div>
                             <div style="padding:8px;text-align:center;font-size:13px;font-weight:600;background:#f9fafb;"><?php echo esc_html( $tv[0] ); ?></div>

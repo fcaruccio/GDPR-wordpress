@@ -36,12 +36,12 @@ class Scudo_GCM {
 <script data-gdpr-category="necessary">
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{
-'ad_storage':'<?php echo $marketing_granted; ?>',
-'ad_user_data':'<?php echo $marketing_granted; ?>',
-'ad_personalization':'<?php echo $marketing_granted; ?>',
-'analytics_storage':'<?php echo $analytics_granted; ?>',
-'functionality_storage':'<?php echo $preferences_granted; ?>',
-'personalization_storage':'<?php echo $preferences_granted; ?>',
+'ad_storage':'<?php echo esc_attr( $marketing_granted ); ?>',
+'ad_user_data':'<?php echo esc_attr( $marketing_granted ); ?>',
+'ad_personalization':'<?php echo esc_attr( $marketing_granted ); ?>',
+'analytics_storage':'<?php echo esc_attr( $analytics_granted ); ?>',
+'functionality_storage':'<?php echo esc_attr( $preferences_granted ); ?>',
+'personalization_storage':'<?php echo esc_attr( $preferences_granted ); ?>',
 'security_storage':'granted',
 'wait_for_update':500
 });
