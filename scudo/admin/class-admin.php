@@ -108,6 +108,7 @@ class Scudo_Admin {
 
         $options = scudo_options();
         $stats   = Scudo_Consent::get_stats( 30 );
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- tab navigation, no data mutation
         $tab     = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : 'dashboard';
         ?>
         <div class="wrap">
@@ -305,13 +306,16 @@ class Scudo_Admin {
                             <tr>
                                 <th scope="row"><label for="policy_page"><?php esc_html_e( 'Pagina Cookie Policy', 'scudo' ); ?></label></th>
                                 <td>
-                                    <?php wp_dropdown_pages( [
+                                    <?php
+                                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_dropdown_pages handles its own escaping
+                                    wp_dropdown_pages( [
                                         'name'              => 'scudo_options[policy_page]',
                                         'id'                => 'policy_page',
-                                        'selected'          => $options['policy_page'],
-                                        'show_option_none'  => __( '— Seleziona una pagina —', 'scudo' ),
+                                        'selected'          => absint( $options['policy_page'] ),
+                                        'show_option_none'  => esc_html__( '— Seleziona una pagina —', 'scudo' ),
                                         'option_none_value' => 0,
-                                    ] ); ?>
+                                    ] );
+                                    ?>
                                     <p class="description"><?php esc_html_e( 'Il banner inserisce un link a questa pagina. Puoi usare [scudo_cookie_table] al suo interno.', 'scudo' ); ?></p>
                                 </td>
                             </tr>

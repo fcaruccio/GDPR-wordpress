@@ -371,8 +371,8 @@ class Scudo_Privacy_Policy {
         $c = '';
 
         // Intro
-        // translators: %s is the website URL wrapped in a <strong> tag.
         $c .= '<p>' . sprintf(
+            // translators: %s is the website URL wrapped in a <strong> tag.
             __( 'La presente informativa sulla privacy descrive le modalità di raccolta e trattamento dei dati personali degli utenti che visitano il sito web %s (di seguito "il Sito"), ai sensi del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003 (Codice Privacy).', 'scudo' ),
             '<strong>' . esc_html( $url ) . '</strong>'
         ) . '</p>';

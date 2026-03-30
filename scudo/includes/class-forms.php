@@ -38,8 +38,8 @@ class Scudo_Forms {
         }
 
         if ( $policy_url ) {
-            // translators: %s is the URL to the privacy policy page.
             return sprintf(
+                // translators: %s is the URL to the privacy policy page.
                 __( 'Ho letto l\'<a href="%s" target="_blank" rel="noopener">informativa sulla privacy</a> e acconsento al trattamento dei miei dati personali per la gestione della presente richiesta. *', 'scudo' ),
                 esc_url( $policy_url )
             );
