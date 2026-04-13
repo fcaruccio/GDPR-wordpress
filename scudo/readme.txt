@@ -4,7 +4,7 @@ Tags: gdpr, cookie, privacy, consent, cookie banner
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,12 @@ The plugin also detects and can reference privacy policies for Cloudflare, Mailc
 
 == Changelog ==
 
+= 1.0.1 =
+* Renamed plugin to "Scudo Cookie & Privacy" (new slug: scudo-cookie-privacy)
+* Replaced all inline scripts and styles with wp_enqueue functions
+* Added External Services documentation to readme
+* Updated author to Velocia (velocia.it)
+
 = 1.0.0 =
 * Initial public release
 * Cookie banner compliant with Italian Garante Privacy 2021
@@ -201,6 +207,9 @@ The plugin also detects and can reference privacy policies for Cloudflare, Mailc
 * WPML/Polylang support
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Plugin renamed, enqueue fixes, external services documented.
 
 = 1.0.0 =
 Initial release. Install and follow the wizard to make your site GDPR compliant in 2 minutes.
