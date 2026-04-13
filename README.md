@@ -111,7 +111,7 @@ Le richieste vengono salvate nel database e notificate via email all'amministrat
 
 ### Self-hosting dei Google Fonts
 
-Dal 2022, una sentenza del tribunale di Monaco ha stabilito che caricare i Google Fonts dal CDN di Google trasferisce l'IP dell'utente a Google senza consenso.
+Nel gennaio 2022, il **Landgericht München I** (Tribunale regionale di Monaco I) con la [sentenza 3 O 17493/20](https://openjur.de/u/2384915.html) ha stabilito che caricare i Google Fonts dal CDN di Google trasferisce l'indirizzo IP del visitatore a Google senza consenso, in violazione degli articoli 6(1) e 13 del GDPR.
 
 Scudo risolve il problema con un clic: scarica i font usati dal tuo tema in locale e riscrive automaticamente gli URL. Nessuna richiesta verso i server di Google.
 
