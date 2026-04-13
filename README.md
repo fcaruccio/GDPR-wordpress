@@ -1,8 +1,8 @@
 # Scudo — Plugin GDPR per WordPress
 
-**Scudo** è un plugin WordPress gratuito e open-source per la conformità al GDPR e alle linee guida del Garante Privacy italiano (giugno 2021).
+**Scudo** è un plugin WordPress gratuito e open-source sviluppato da [**VELOCIA**](https://velocia.it), che lo rilascia gratuitamente alla comunità WordPress.
 
-Leggero (12 KB totali tra CSS e JS), senza dipendenze esterne, senza jQuery. Funziona con qualsiasi tema WordPress.
+Un plugin GDPR leggero (12 KB totali tra CSS e JS), senza dipendenze esterne, senza jQuery, progettato per la conformità al GDPR e alle linee guida del Garante Privacy italiano (giugno 2021). Funziona con qualsiasi tema WordPress.
 
 > **Stato:** in fase di approvazione sulla directory ufficiale WordPress.org. Nel frattempo puoi scaricarlo da qui e installarlo manualmente.
 
@@ -190,7 +190,7 @@ Scudo è uno **strumento tecnico** che facilita l'implementazione di alcune misu
 
 **La responsabilità della conformità al GDPR resta interamente in capo al titolare del trattamento**, ovvero a te o alla tua organizzazione. Ti consigliamo di consultare un professionista qualificato in materia di protezione dei dati personali per verificare che il tuo sito web sia pienamente conforme alla normativa applicabile.
 
-Questo plugin è distribuito "così com'è" (**as is**), senza garanzie di alcun tipo, esplicite o implicite. L'autore non è responsabile per eventuali danni, sanzioni, contestazioni o perdite derivanti dall'utilizzo del plugin o dalla mancata conformità alla normativa.
+Questo plugin è distribuito "così com'è" (**as is**), senza garanzie di alcun tipo, esplicite o implicite. VELOCIA e gli autori del plugin non sono responsabili per eventuali danni, sanzioni, contestazioni o perdite derivanti dall'utilizzo del plugin o dalla mancata conformità alla normativa.
 
 ---
 
@@ -202,4 +202,6 @@ GPL-2.0-or-later — Vedi il file [LICENSE](scudo/LICENSE) per i dettagli.
 
 ## Autore
 
-Sviluppato da **Francesco Caruccio**.
+Sviluppato e mantenuto da [**VELOCIA**](https://velocia.it) — web agency specializzata in siti WordPress, performance e conformità normativa.
+
+Per domande, segnalazioni o contributi: [apri una issue](../../issues) su questo repository.
