@@ -4,7 +4,7 @@ Tags: gdpr, cookie, privacy, consent, cookie banner
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -186,6 +186,9 @@ This plugin also blocks scripts from TikTok, Pinterest, Twitter/X, Amazon Ads, C
 The plugin also detects and can reference privacy policies for Cloudflare, Mailchimp/Intuit, Stripe, and PayPal in the auto-generated Privacy Policy page. These are informational links included in the generated policy text, not active connections made by the plugin.
 
 == Changelog ==
+
+= 1.0.3 =
+* Fixed mobile banner excessive height — overrode `.scudo-banner__content` flex-basis in column layout
 
 = 1.0.2 =
 * Removed WordPress.org directory assets (banner/icon PNGs) from plugin zip

@@ -494,6 +494,10 @@
         padding-right: 40px;
     }
 
+    .scudo-banner__content {
+        flex: 0 1 auto;
+    }
+
     .scudo-banner__actions {
         width: 100%;
     }
